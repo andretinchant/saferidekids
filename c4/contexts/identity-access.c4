@@ -1,0 +1,50 @@
+model {
+  extend saferide {
+    identityAccess = context 'Identity & Access' {
+      description 'Autenticacao, autorizacao, perfis estendidos, 2FA, Tenant Resolver transversal.'
+
+      signUpFn = component 'SignUpFunction' {
+        description 'Cadastro inicial de usuario (pai/motorista).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      signInFn = component 'SignInFunction' {
+        description 'Login com usuario/senha via Cognito.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      refreshTokenFn = component 'RefreshTokenFunction' {
+        description 'Renovacao de JWT.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      enable2faFn = component 'Enable2FAFunction' {
+        description 'Habilita 2FA para o usuario.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      verify2faFn = component 'Verify2FAFunction' {
+        description 'Valida codigo 2FA durante login sensivel.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      tenantResolver = component 'TenantResolverLayer' {
+        description 'Middleware compartilhado: extrai custom:tenantId do JWT e injeta em contexto de execucao de toda Lambda. Lambda Layer consumida transversalmente.'
+        technology 'AWS Lambda Layer (.NET 8)'
+      }
+      profileStore = component 'ProfileStore' {
+        description 'Perfis estendidos (dados que nao cabem em Cognito attributes).'
+        technology 'DynamoDB table (tenantId, userId)'
+      }
+
+      signUpFn -> cognito 'Cria usuario no User Pool'
+      signInFn -> cognito 'InitiateAuth'
+      refreshTokenFn -> cognito 'RefreshToken'
+      enable2faFn -> cognito 'AssociateSoftwareToken'
+      verify2faFn -> cognito 'VerifySoftwareToken'
+      signUpFn -> profileStore 'Grava perfil estendido'
+      signInFn -> profileStore 'Le perfil'
+    }
+  }
+
+  saferide.apiGateway -> saferide.identityAccess.signUpFn 'POST /auth/signup'
+  saferide.apiGateway -> saferide.identityAccess.signInFn 'POST /auth/signin'
+  saferide.apiGateway -> saferide.identityAccess.refreshTokenFn 'POST /auth/refresh'
+  saferide.apiGateway -> saferide.identityAccess.enable2faFn 'POST /auth/2fa/enable'
+  saferide.apiGateway -> saferide.identityAccess.verify2faFn 'POST /auth/2fa/verify'
+}
