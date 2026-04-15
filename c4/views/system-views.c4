@@ -1,0 +1,21 @@
+views {
+  view landscape {
+    title 'SafeRide Kids - Landscape (System Context)'
+    description 'Visao nivel 1 do C4: a plataforma como caixa preta com atores e sistemas externos.'
+
+    include parent, driver, operator, dpo
+    include saferide
+    include aws, gmaps, fcm, paymentGateway, faceProvider, backgroundCheck, nfse
+
+    autoLayout LeftRight
+  }
+
+  view containers of saferide {
+    title 'SafeRide Kids - Containers (Level 2)'
+    description 'Visao nivel 2: apps, APIs, canal real-time, eventos, dados, observabilidade e os 13 bounded contexts agrupados.'
+
+    include *
+
+    autoLayout TopBottom
+  }
+}
