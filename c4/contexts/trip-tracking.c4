@@ -1,0 +1,71 @@
+model {
+  extend saferide {
+    tripTracking = context 'Trip & Tracking' {
+      description 'Ciclo de vida da corrida: start -> telemetria GPS -> embarques (modo configuravel) -> chegada -> conclusao.'
+
+      startTripFn = component 'StartTripFunction' {
+        description 'Motorista inicia a corrida (associada a um ServiceAssignment).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      ingestGpsFn = component 'IngestGpsTelemetryFunction' {
+        description 'Consumer do Kinesis: processa e persiste telemetria.'
+        technology 'AWS Lambda (.NET 8) - Kinesis consumer'
+      }
+      publishPositionFn = component 'PublishPositionToSubscribersFunction' {
+        description 'Empurra posicao para AppSync subscribers (apps familia com conexao ativa).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      recordBoardingFn = component 'RecordBoardingFunction' {
+        description 'Registra embarque (modo manual | facial | tag conforme flag da familia).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      verifyFaceFn = component 'VerifyFaceMatchFunction' {
+        description 'Verificacao facial quando flag=facial.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      verifyTagFn = component 'VerifyTagReadFunction' {
+        description 'Validacao de leitura BLE/NFC quando flag=tag.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      recordAlightingFn = component 'RecordAlightingFunction' {
+        description 'Check-out com geolocalizacao. Se local diferente do cadastrado, marca localizacao real.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      completeTripFn = component 'CompleteTripFunction' {
+        description 'Finaliza a corrida, calcula valor da adjudicacao para essa viagem, emite TripCompleted.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      tripStore = component 'TripStore' {
+        description 'Corridas ativas e historico com composicao (quais criancas).'
+        technology 'DynamoDB table (tenantId, tripId)'
+      }
+      telemetryStore = component 'TelemetryStore' {
+        description 'Telemetria GPS por corrida. TTL 90 dias.'
+        technology 'DynamoDB table com TTL'
+      }
+
+      startTripFn -> tripStore 'INSERT trip'
+      startTripFn -> eventBus 'Publish: TripStarted'
+      ingestGpsFn -> gpsStream 'Subscribe (Kinesis consumer)'
+      ingestGpsFn -> telemetryStore 'PutItem'
+      ingestGpsFn -> publishPositionFn 'Invoke'
+      publishPositionFn -> appsync 'Publish subscription update'
+      recordBoardingFn -> tripStore 'UPDATE composition'
+      recordBoardingFn -> eventBus 'Publish: BoardingRecorded'
+      verifyFaceFn -> faceProvider 'Verify match'
+      verifyTagFn -> tripStore 'Le composicao esperada'
+      recordAlightingFn -> tripStore 'UPDATE alighting'
+      recordAlightingFn -> eventBus 'Publish: AlightingRecorded | LocationDeviated'
+      completeTripFn -> tripStore 'UPDATE status=completed'
+      completeTripFn -> eventBus 'Publish: TripCompleted'
+    }
+  }
+
+  saferide.apiGateway -> saferide.tripTracking.startTripFn 'POST /trips/start'
+  saferide.apiGateway -> saferide.tripTracking.recordBoardingFn 'POST /trips/{id}/boarding'
+  saferide.apiGateway -> saferide.tripTracking.recordAlightingFn 'POST /trips/{id}/alighting'
+  saferide.apiGateway -> saferide.tripTracking.completeTripFn 'POST /trips/{id}/complete'
+
+  saferide.tripTracking.tripStore -> saferide.dynamo 'Table owner'
+  saferide.tripTracking.telemetryStore -> saferide.dynamo 'Table owner'
+}
