@@ -1,0 +1,52 @@
+model {
+  extend saferide {
+    walletSettlement = context 'Wallet & Settlement' {
+      description 'Ledger interno com tres contas logicas: Custody (saldo retido), Driver Payable (a pagar), Platform Revenue (margem reconhecida). Executa liberacoes periodicas via gateway.'
+
+      recordCustodyFn = component 'RecordCustodyFunction' {
+        description 'Consumer de SubscriptionPaid: registra saldo em custodia.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      creditDriverFn = component 'CreditDriverFunction' {
+        description 'Consumer de TripCompleted: move Custody -> Driver Payable + Platform Revenue.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      closeCycleFn = component 'CloseSettlementCycleFunction' {
+        description 'Agendado: fecha ciclo (semanal/quinzenal) e marca saldos elegiveis para transferencia.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      executeTransferFn = component 'ExecuteDriverTransferFunction' {
+        description 'Executa transfer para motorista via Payment Gateway.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      disputeFn = component 'HandleDisputeFunction' {
+        description 'Tratamento de estornos, chargebacks e retencao preventiva em disputa.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      ledgerStore = component 'LedgerStore' {
+        description 'Livro-razao com restricoes transacionais fortes. Entradas imutaveis (append-only).'
+        technology 'PostgreSQL schema (tenantId, ACID)'
+      }
+      settlementRulesStore = component 'SettlementRulesStore' {
+        description 'Regras de ciclo, janela de contestacao, minimo de saque.'
+        technology 'PostgreSQL table (tenantId, version)'
+      }
+
+      recordCustodyFn -> eventBus 'Subscribe: SubscriptionPaid'
+      recordCustodyFn -> ledgerStore 'INSERT custody entry'
+      creditDriverFn -> eventBus 'Subscribe: TripCompleted'
+      creditDriverFn -> ledgerStore 'INSERT payable + revenue entries'
+      closeCycleFn -> settlementRulesStore 'Le regras'
+      closeCycleFn -> ledgerStore 'Marca elegiveis'
+      closeCycleFn -> eventBus 'Publish: SettlementCycleClosed'
+      executeTransferFn -> paymentGateway 'Transfer'
+      executeTransferFn -> ledgerStore 'Marca como paid'
+      executeTransferFn -> eventBus 'Publish: DriverPaid'
+      disputeFn -> eventBus 'Subscribe: PaymentRefunded'
+      disputeFn -> ledgerStore 'Reverter/reter'
+    }
+  }
+
+  saferide.walletSettlement.ledgerStore -> saferide.postgres 'Schema owner'
+  saferide.walletSettlement.settlementRulesStore -> saferide.postgres 'Table owner'
+}
