@@ -1,0 +1,40 @@
+model {
+  extend saferide {
+    billingPayments = context 'Billing & Payments' {
+      description 'Cobranca recorrente dos pais, emissao de NFS-e, inadimplencia, estornos.'
+
+      chargeSubscriptionFn = component 'ChargeSubscriptionFunction' {
+        description 'Agendado por CloudWatch Events: cobra ciclo via Payment Gateway.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      paymentWebhookFn = component 'HandlePaymentWebhookFunction' {
+        description 'Callback HTTPS do gateway: confirmacao, falha, chargeback.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      issueInvoiceFn = component 'IssueInvoiceFunction' {
+        description 'Emite NFS-e apos pagamento confirmado.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      handleRefundFn = component 'HandleRefundFunction' {
+        description 'Processa reembolsos pro-rata em cancelamento.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      delinquencyStore = component 'DelinquencyStore' {
+        description 'Cobrancas em aberto, tentativas, inadimplentes.'
+        technology 'PostgreSQL table'
+      }
+
+      chargeSubscriptionFn -> paymentGateway 'Create charge'
+      paymentWebhookFn -> delinquencyStore 'Atualiza status'
+      paymentWebhookFn -> eventBus 'Publish: SubscriptionPaid | PaymentFailed'
+      issueInvoiceFn -> nfse 'Emit NFS-e'
+      handleRefundFn -> paymentGateway 'Refund'
+      handleRefundFn -> eventBus 'Publish: PaymentRefunded'
+    }
+  }
+
+  saferide.apiGateway -> saferide.billingPayments.paymentWebhookFn 'POST /webhooks/payment (gateway callback)'
+  saferide.apiGateway -> saferide.billingPayments.handleRefundFn 'POST /payments/{id}/refund (admin)'
+
+  saferide.billingPayments.delinquencyStore -> saferide.postgres 'Table owner'
+}
