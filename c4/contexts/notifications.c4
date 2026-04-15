@@ -1,0 +1,34 @@
+model {
+  extend saferide {
+    notifications = context 'Notifications' {
+      description 'Push, alertas contextuais, canais, preferencias, historico auditavel.'
+
+      sendPushFn = component 'SendPushNotificationFunction' {
+        description 'Entrega push via FCM conforme template e preferencias do destinatario.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      templateStore = component 'NotificationTemplateStore' {
+        description 'Templates versionados (pt-BR + outras futuras).'
+        technology 'DynamoDB table'
+      }
+      preferencesStore = component 'NotificationPreferencesStore' {
+        description 'Preferencias por usuario (canais, horarios, tipos).'
+        technology 'DynamoDB table (tenantId, userId)'
+      }
+      auditStore = component 'NotificationAuditStore' {
+        description 'Historico de entregas para Compliance.'
+        technology 'DynamoDB table com TTL longo'
+      }
+
+      sendPushFn -> eventBus 'Subscribe: multiplos eventos de dominio'
+      sendPushFn -> templateStore 'Le template'
+      sendPushFn -> preferencesStore 'Le preferencias'
+      sendPushFn -> fcm 'Enviar push'
+      sendPushFn -> auditStore 'Registra entrega'
+    }
+  }
+
+  saferide.notifications.templateStore -> saferide.dynamo 'Table owner'
+  saferide.notifications.preferencesStore -> saferide.dynamo 'Table owner'
+  saferide.notifications.auditStore -> saferide.dynamo 'Table owner'
+}
