@@ -1,0 +1,92 @@
+views {
+  view identityAccessView of saferide.identityAccess {
+    title 'Identity & Access - Components'
+    include *
+    include saferide.apiGateway, saferide.cognito
+    autoLayout TopBottom
+  }
+
+  view driverOnboardingView of saferide.driverOnboarding {
+    title 'Driver Onboarding - Components'
+    include *
+    include saferide.apiGateway, saferide.postgres, saferide.s3, backgroundCheck, saferide.eventBus
+    autoLayout TopBottom
+  }
+
+  view familyChildrenView of saferide.familyChildren {
+    title 'Family & Children - Components'
+    include *
+    include saferide.apiGateway, saferide.postgres, saferide.s3, faceProvider
+    autoLayout TopBottom
+  }
+
+  view matchingBiddingView of saferide.matchingBidding {
+    title 'Matching & Bidding - Components'
+    include *
+    include saferide.apiGateway, saferide.dynamo, saferide.postgres, saferide.eventBus
+    autoLayout TopBottom
+  }
+
+  view reputationRatingView of saferide.reputationRating {
+    title 'Reputation & Rating - Components'
+    include *
+    include saferide.apiGateway, saferide.dynamo, saferide.eventBus
+    autoLayout TopBottom
+  }
+
+  view contractsView of saferide.contracts {
+    title 'Contracts - Components'
+    include *
+    include saferide.apiGateway, saferide.postgres, saferide.eventBus
+    autoLayout TopBottom
+  }
+
+  view billingPaymentsView of saferide.billingPayments {
+    title 'Billing & Payments - Components'
+    include *
+    include saferide.apiGateway, saferide.postgres, saferide.eventBus, paymentGateway, nfse
+    autoLayout TopBottom
+  }
+
+  view walletSettlementView of saferide.walletSettlement {
+    title 'Wallet & Settlement - Components'
+    include *
+    include saferide.postgres, saferide.eventBus, paymentGateway
+    autoLayout TopBottom
+  }
+
+  view routingView of saferide.routing {
+    title 'Routing - Components'
+    include *
+    include saferide.apiGateway, saferide.dynamo, saferide.eventBus, gmaps
+    autoLayout TopBottom
+  }
+
+  view tripTrackingView of saferide.tripTracking {
+    title 'Trip & Tracking - Components'
+    include *
+    include saferide.apiGateway, saferide.appsync, saferide.gpsStream, saferide.dynamo, saferide.eventBus, faceProvider
+    autoLayout TopBottom
+  }
+
+  view notificationsView of saferide.notifications {
+    title 'Notifications - Components'
+    include *
+    include saferide.dynamo, saferide.eventBus, fcm
+    autoLayout TopBottom
+  }
+
+  view complianceAuditView of saferide.complianceAudit {
+    title 'Compliance & Audit - Components'
+    include *
+    include saferide.apiGateway, saferide.postgres, saferide.s3, saferide.eventBus
+    autoLayout TopBottom
+  }
+
+  view adminBackofficeView of saferide.adminBackoffice {
+    title 'Admin / Back-office - Components'
+    include *
+    include saferide.apiGateway, saferide.adminWeb
+    autoLayout TopBottom
+  }
+}
