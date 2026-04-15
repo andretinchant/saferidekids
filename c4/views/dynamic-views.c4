@@ -1,0 +1,98 @@
+views {
+  dynamic view biddingFlow {
+    title 'Dynamic - Bidding & Renewal Flow'
+    description 'Do gatilho do leilao ate a adjudicacao/renovacao.'
+
+    saferide.contracts.createSubscriptionFn -> saferide.eventBus 'Publish: FamilySubscriptionCreated'
+    saferide.eventBus -> saferide.matchingBidding.openBidWindowFn 'Deliver event'
+    saferide.matchingBidding.openBidWindowFn -> saferide.matchingBidding.bidStore 'Create BidWindow'
+    saferide.matchingBidding.openBidWindowFn -> saferide.eventBus 'Publish: BidWindowOpened'
+    saferide.eventBus -> saferide.matchingBidding.notifyEligibleDriversFn 'Deliver event'
+    saferide.matchingBidding.notifyEligibleDriversFn -> saferide.notifications.sendPushFn 'Request push'
+    saferide.notifications.sendPushFn -> fcm 'Deliver push to drivers'
+    fcm -> saferide.driverApp 'Push notification'
+    saferide.driverApp -> saferide.apiGateway 'POST /bids'
+    saferide.apiGateway -> saferide.matchingBidding.submitBidFn 'Invoke'
+    saferide.matchingBidding.submitBidFn -> saferide.matchingBidding.bidStore 'Insert bid'
+    saferide.matchingBidding.submitBidFn -> saferide.eventBus 'Publish: BidSubmitted'
+
+    saferide.matchingBidding.awardAssignmentFn -> saferide.matchingBidding.scoringEngineFn 'Score bids'
+    saferide.matchingBidding.scoringEngineFn -> saferide.matchingBidding.scoringRulesStore 'Read active weights'
+    saferide.matchingBidding.scoringEngineFn -> saferide.matchingBidding.bidStore 'Read bids'
+    saferide.matchingBidding.awardAssignmentFn -> saferide.eventBus 'Publish: ServiceAssignmentAwarded'
+    saferide.eventBus -> saferide.contracts.createAssignmentFn 'Deliver event'
+    saferide.contracts.createAssignmentFn -> saferide.contracts.contractStore 'Insert assignment'
+    saferide.contracts.createAssignmentFn -> saferide.eventBus 'Publish: ServiceAssignmentCreated'
+
+    saferide.contracts.closeAssignmentFn -> saferide.eventBus 'Publish: AssignmentPeriodEnding'
+    saferide.eventBus -> saferide.reputationRating.evaluateSatisfactionFn 'Deliver event'
+    saferide.reputationRating.evaluateSatisfactionFn -> saferide.eventBus 'Publish: SatisfactionEvaluated (ok)'
+    saferide.eventBus -> saferide.matchingBidding.offerRenewalFn 'Deliver event'
+    saferide.matchingBidding.offerRenewalFn -> saferide.eventBus 'Publish: RenewalOffered'
+    saferide.driverApp -> saferide.apiGateway 'POST /renewals/{id}/accept'
+    saferide.apiGateway -> saferide.matchingBidding.acceptRenewalFn 'Invoke'
+    saferide.matchingBidding.acceptRenewalFn -> saferide.eventBus 'Publish: RenewalAccepted'
+  }
+
+  dynamic view tripLifecycle {
+    title 'Dynamic - Trip Lifecycle'
+    description 'Do planejamento a conclusao da viagem.'
+
+    saferide.eventBus -> saferide.routing.planRouteFn 'Deliver: ServiceAssignmentCreated'
+    saferide.routing.planRouteFn -> gmaps 'Directions + Distance Matrix'
+    saferide.routing.planRouteFn -> saferide.routing.routeCache 'Put'
+    saferide.routing.planRouteFn -> saferide.eventBus 'Publish: RoutePlanned'
+
+    saferide.driverApp -> saferide.apiGateway 'POST /trips/start'
+    saferide.apiGateway -> saferide.tripTracking.startTripFn 'Invoke'
+    saferide.tripTracking.startTripFn -> saferide.tripTracking.tripStore 'Insert'
+    saferide.tripTracking.startTripFn -> saferide.eventBus 'Publish: TripStarted'
+
+    saferide.driverApp -> saferide.gpsStream 'Publish GPS every 5-10s'
+    saferide.gpsStream -> saferide.tripTracking.ingestGpsFn 'Consume'
+    saferide.tripTracking.ingestGpsFn -> saferide.tripTracking.telemetryStore 'PutItem'
+    saferide.tripTracking.ingestGpsFn -> saferide.tripTracking.publishPositionFn 'Invoke'
+    saferide.tripTracking.publishPositionFn -> saferide.appsync 'Publish subscription'
+    saferide.appsync -> saferide.familyApp 'Live position'
+
+    saferide.driverApp -> saferide.apiGateway 'POST /trips/{id}/boarding'
+    saferide.apiGateway -> saferide.tripTracking.recordBoardingFn 'Invoke'
+    saferide.tripTracking.recordBoardingFn -> saferide.tripTracking.verifyFaceFn 'If flag=facial'
+    saferide.tripTracking.verifyFaceFn -> faceProvider 'Verify match'
+    saferide.tripTracking.recordBoardingFn -> saferide.eventBus 'Publish: BoardingRecorded'
+    saferide.eventBus -> saferide.notifications.sendPushFn 'Notify parent'
+
+    saferide.driverApp -> saferide.apiGateway 'POST /trips/{id}/alighting'
+    saferide.apiGateway -> saferide.tripTracking.recordAlightingFn 'Invoke'
+    saferide.tripTracking.recordAlightingFn -> saferide.eventBus 'Publish: AlightingRecorded'
+
+    saferide.driverApp -> saferide.apiGateway 'POST /trips/{id}/complete'
+    saferide.apiGateway -> saferide.tripTracking.completeTripFn 'Invoke'
+    saferide.tripTracking.completeTripFn -> saferide.tripTracking.tripStore 'UPDATE status=completed'
+    saferide.tripTracking.completeTripFn -> saferide.eventBus 'Publish: TripCompleted'
+  }
+
+  dynamic view paymentSettlementFlow {
+    title 'Dynamic - Payment & Settlement Flow'
+    description 'Do pagamento do pai a liberacao para o motorista.'
+
+    saferide.billingPayments.chargeSubscriptionFn -> paymentGateway 'Create charge'
+    paymentGateway -> saferide.apiGateway 'POST /webhooks/payment'
+    saferide.apiGateway -> saferide.billingPayments.paymentWebhookFn 'Invoke'
+    saferide.billingPayments.paymentWebhookFn -> saferide.eventBus 'Publish: SubscriptionPaid'
+    saferide.eventBus -> saferide.walletSettlement.recordCustodyFn 'Deliver event'
+    saferide.walletSettlement.recordCustodyFn -> saferide.walletSettlement.ledgerStore 'INSERT custody'
+
+    saferide.eventBus -> saferide.walletSettlement.creditDriverFn 'Deliver: TripCompleted'
+    saferide.walletSettlement.creditDriverFn -> saferide.walletSettlement.ledgerStore 'Move custody to payable + revenue'
+
+    saferide.walletSettlement.closeCycleFn -> saferide.walletSettlement.settlementRulesStore 'Read rules'
+    saferide.walletSettlement.closeCycleFn -> saferide.walletSettlement.ledgerStore 'Mark eligible'
+    saferide.walletSettlement.closeCycleFn -> saferide.eventBus 'Publish: SettlementCycleClosed'
+    saferide.eventBus -> saferide.walletSettlement.executeTransferFn 'Deliver event'
+    saferide.walletSettlement.executeTransferFn -> paymentGateway 'Transfer to driver'
+    saferide.walletSettlement.executeTransferFn -> saferide.walletSettlement.ledgerStore 'Mark paid'
+    saferide.walletSettlement.executeTransferFn -> saferide.eventBus 'Publish: DriverPaid'
+    saferide.eventBus -> saferide.notifications.sendPushFn 'Notify driver'
+  }
+}
