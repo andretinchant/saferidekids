@@ -1,0 +1,16 @@
+{
+  "name": "saferidekids-c4",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SafeRide Kids navigable C4 model",
+  "scripts": {
+    "build": "likec4 build -o dist",
+    "start": "likec4 start",
+    "validate": "likec4 validate",
+    "export:png": "likec4 export png -o dist/png",
+    "export:svg": "likec4 export svg -o dist/svg"
+  },
+  "devDependencies": {
+    "likec4": "^1.20.0"
+  }
+}
