@@ -1,0 +1,47 @@
+model {
+  extend saferide {
+    adminBackoffice = context 'Admin / Back-office' {
+      description 'APIs do Painel Admin: operacoes, relatorios, regras configuraveis, mediacao de disputas.'
+
+      manageDriversFn = component 'ManageDriversFunction' {
+        description 'CRUD + aprovacao/suspensao de motoristas.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      manageFamiliesFn = component 'ManageFamiliesFunction' {
+        description 'Busca e suporte a familias.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      viewLedgerFn = component 'ViewLedgerFunction' {
+        description 'Dashboard financeiro: custody, payable, revenue por tenant.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      viewReportsFn = component 'ViewReportsFunction' {
+        description 'Relatorios: ocupacao, rentabilidade por rota/motorista, SLAs.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      manageScoringRulesFn = component 'ManageScoringRulesFunction' {
+        description 'Versiona pesos do scoring do Matching & Bidding.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      manageSettlementRulesFn = component 'ManageSettlementRulesFunction' {
+        description 'Versiona regras de ciclo do Wallet & Settlement.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      disputesFn = component 'DisputesFunction' {
+        description 'Mediacao de disputas pais-motoristas.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+
+      manageScoringRulesFn -> saferide.matchingBidding.scoringRulesStore 'Atualiza versao'
+      manageSettlementRulesFn -> saferide.walletSettlement.settlementRulesStore 'Atualiza versao'
+    }
+  }
+
+  saferide.apiGateway -> saferide.adminBackoffice.manageDriversFn 'GET/PUT /admin/drivers'
+  saferide.apiGateway -> saferide.adminBackoffice.manageFamiliesFn 'GET /admin/families'
+  saferide.apiGateway -> saferide.adminBackoffice.viewLedgerFn 'GET /admin/ledger'
+  saferide.apiGateway -> saferide.adminBackoffice.viewReportsFn 'GET /admin/reports'
+  saferide.apiGateway -> saferide.adminBackoffice.manageScoringRulesFn 'PUT /admin/scoring-rules'
+  saferide.apiGateway -> saferide.adminBackoffice.manageSettlementRulesFn 'PUT /admin/settlement-rules'
+  saferide.apiGateway -> saferide.adminBackoffice.disputesFn 'POST /admin/disputes'
+}
