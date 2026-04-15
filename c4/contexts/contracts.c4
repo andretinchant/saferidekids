@@ -1,0 +1,48 @@
+model {
+  extend saferide {
+    contracts = context 'Contracts' {
+      description 'Dois tipos de acordo: Family Subscription (pai-plataforma, valor fixo, recorrente) e Service Assignment (plataforma-motorista, janela semanal/mensal, valor variavel).'
+
+      createSubscriptionFn = component 'CreateFamilySubscriptionFunction' {
+        description 'Cria contrato recorrente com o pai (mensal/semestral/anual).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      renewSubscriptionFn = component 'RenewFamilySubscriptionFunction' {
+        description 'Renova contrato do pai no ciclo.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      cancelSubscriptionFn = component 'CancelFamilySubscriptionFunction' {
+        description 'Cancela contrato do pai (com regras de reembolso pro-rata).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      createAssignmentFn = component 'CreateServiceAssignmentFunction' {
+        description 'Materializa a adjudicacao do leilao ou renovacao em um assignment ativo.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      closeAssignmentFn = component 'CloseServiceAssignmentFunction' {
+        description 'Fim da janela: dispara gatilho de renovacao ou relicitacao.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      contractStore = component 'ContractStore' {
+        description 'Tabelas relacionais: FamilySubscription, ServiceAssignment, renovacoes, cancelamentos.'
+        technology 'PostgreSQL schema (tenantId em cada tabela)'
+      }
+
+      createSubscriptionFn -> contractStore 'INSERT subscription'
+      createSubscriptionFn -> eventBus 'Publish: FamilySubscriptionCreated'
+      renewSubscriptionFn -> contractStore 'INSERT renewed subscription'
+      renewSubscriptionFn -> eventBus 'Publish: FamilySubscriptionRenewed'
+      cancelSubscriptionFn -> contractStore 'UPDATE status=canceled'
+      cancelSubscriptionFn -> eventBus 'Publish: FamilySubscriptionCanceled'
+      createAssignmentFn -> contractStore 'INSERT assignment'
+      createAssignmentFn -> eventBus 'Publish: ServiceAssignmentCreated'
+      closeAssignmentFn -> contractStore 'UPDATE status=closed'
+      closeAssignmentFn -> eventBus 'Publish: ServiceAssignmentClosed, AssignmentPeriodEnding'
+    }
+  }
+
+  saferide.apiGateway -> saferide.contracts.createSubscriptionFn 'POST /subscriptions'
+  saferide.apiGateway -> saferide.contracts.cancelSubscriptionFn 'DELETE /subscriptions/{id}'
+
+  saferide.contracts.contractStore -> saferide.postgres 'Schema owner'
+}
