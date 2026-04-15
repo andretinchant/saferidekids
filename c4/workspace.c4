@@ -1,0 +1,211 @@
+specification {
+  element actor {
+    style {
+      shape person
+      color green
+    }
+  }
+  element system
+  element externalSystem {
+    style {
+      color muted
+    }
+  }
+  element context {
+    style {
+      color indigo
+    }
+  }
+  element container {
+    style {
+      color sky
+    }
+  }
+  element component {
+    style {
+      color sky
+    }
+  }
+  element datastore {
+    style {
+      shape cylinder
+      color amber
+    }
+  }
+  element queue {
+    style {
+      shape queue
+      color slate
+    }
+  }
+
+  relationship uses
+  relationship publishes
+  relationship subscribes
+  relationship reads
+  relationship writes
+  relationship invokes
+
+  tag decision-pending
+  tag aws
+  tag gcp
+  tag external-provider
+  tag mobile
+  tag web
+  tag serverless
+}
+
+model {
+  parent = actor 'Pai / Responsavel' {
+    description 'Contrata o servico via app Familia, acompanha o trajeto dos filhos, avalia motoristas e configura o modo de embarque.'
+  }
+
+  driver = actor 'Motorista Escolar' {
+    description 'Passa pelo onboarding rigoroso, participa de leiloes por janelas de servico, executa as viagens e recebe credito por servico prestado.'
+  }
+
+  operator = actor 'Operador / Back-office' {
+    description 'Equipe interna que usa o Admin para gestao de disputas, dashboards e regras configuraveis.'
+  }
+
+  dpo = actor 'DPO / Encarregado de Dados' {
+    description 'Responsavel LGPD; acessa trilhas de auditoria e atende solicitacoes de titulares.'
+  }
+
+  aws = externalSystem 'AWS' {
+    #aws
+    description 'Provedor de plataforma: Lambda, API Gateway, DynamoDB, Aurora Serverless v2, AppSync, Cognito, EventBridge, SQS, SNS, Kinesis, S3, CloudWatch, X-Ray.'
+  }
+
+  gmaps = externalSystem 'Google Maps Platform' {
+    #external-provider #gcp
+    description 'Directions API, Distance Matrix, Geocoding para rotas, ETA e geocodificacao de enderecos.'
+  }
+
+  fcm = externalSystem 'Firebase Cloud Messaging' {
+    #external-provider
+    description 'Entrega de push notifications para iOS e Android.'
+  }
+
+  paymentGateway = externalSystem 'Payment Gateway' {
+    #decision-pending #external-provider
+    description 'Processamento de cobranca recorrente, retencao em custodia e transfer para motoristas. Decisao pendente - ver ADR-001 (candidato: PagBank).'
+  }
+
+  faceProvider = externalSystem 'Face Recognition Provider' {
+    #decision-pending #external-provider
+    description 'Geracao de embeddings e verificacao facial. Decisao pendente - ver ADR-002.'
+  }
+
+  backgroundCheck = externalSystem 'Background Check Provider' {
+    #decision-pending #external-provider
+    description 'Verificacao de antecedentes criminais de motoristas. Decisao pendente - ver ADR-003.'
+  }
+
+  nfse = externalSystem 'NFS-e Provider' {
+    #decision-pending #external-provider
+    description 'Emissao de notas fiscais eletronicas de servico. Decisao pendente - ver ADR-004.'
+  }
+
+  saferide = system 'SafeRide Kids' {
+    description 'Plataforma serverless multi-tenant que conecta familias a motoristas de transporte escolar.'
+
+    familyApp = container 'App Familia' {
+      #mobile
+      description 'App mobile .NET MAUI para pais/responsaveis: busca de motoristas, acompanhamento GPS, configuracao de embarque, pagamentos.'
+      technology '.NET MAUI (iOS + Android)'
+    }
+
+    driverApp = container 'App Motorista' {
+      #mobile
+      description 'App mobile .NET MAUI para motoristas: onboarding, lances em leilao, execucao de rota, registro de embarque/desembarque, telemetria GPS.'
+      technology '.NET MAUI (iOS + Android)'
+    }
+
+    adminWeb = container 'Painel Admin' {
+      #web
+      description 'SPA Blazor para equipe interna e DPO: operacoes, dashboards financeiros, regras configuraveis, disputas.'
+      technology 'Blazor WebAssembly/Server (a definir)'
+    }
+
+    apiGateway = container 'API Gateway (REST)' {
+      #aws #serverless
+      description 'Fronteira HTTPS sincrona para apps e admin. Auth via Cognito JWT, throttling e cache.'
+      technology 'AWS API Gateway'
+    }
+
+    appsync = container 'AppSync (GraphQL Subscriptions)' {
+      #aws #serverless
+      description 'Canal real-time de push de posicao GPS aos pais com conexao ativa durante corridas.'
+      technology 'AWS AppSync'
+    }
+
+    eventBus = container 'Event Bus' {
+      #aws #serverless
+      description 'Barramento central de eventos de dominio entre contextos.'
+      technology 'AWS EventBridge + SQS + SNS'
+    }
+
+    gpsStream = queue 'GPS Ingestion Stream' {
+      #aws #serverless
+      description 'Absorcao de telemetria GPS do app motorista em picos concentrados.'
+      technology 'AWS Kinesis Data Streams'
+    }
+
+    postgres = datastore 'Aurora Serverless v2 (PostgreSQL)' {
+      #aws
+      description 'Armazenamento relacional transacional multi-tenant para Contracts, Billing, Wallet, Audit, Family, Driver Onboarding (metadata), Scoring/Settlement rules.'
+      technology 'AWS Aurora Serverless v2'
+    }
+
+    dynamo = datastore 'DynamoDB' {
+      #aws #serverless
+      description 'Armazenamento NoSQL multi-tenant (tenantId em partition key) para dados quentes: Trip/Tracking, Bidding, Notifications, Ratings, Routing cache, perfis estendidos, sessoes.'
+      technology 'AWS DynamoDB'
+    }
+
+    s3 = datastore 'S3' {
+      #aws
+      description 'Objetos: fotos de documentos, fotos do veiculo, embeddings faciais cifrados, arquivamento imutavel de audit.'
+      technology 'AWS S3'
+    }
+
+    cognito = container 'Cognito User Pool' {
+      #aws #serverless
+      description 'Autenticacao. User Pool unico com custom:tenantId e grupos por role (parent, driver, operator, dpo).'
+      technology 'AWS Cognito'
+    }
+
+    observability = container 'Observability Stack' {
+      #aws
+      description 'Metricas, logs, tracing distribuido.'
+      technology 'AWS CloudWatch + X-Ray'
+    }
+  }
+
+  parent -> saferide.familyApp 'Usa para contratar e acompanhar'
+  driver -> saferide.driverApp 'Usa para onboarding, lances e execucao'
+  operator -> saferide.adminWeb 'Gerencia operacoes'
+  dpo -> saferide.adminWeb 'Audita e atende solicitacoes LGPD'
+
+  saferide.familyApp -> saferide.apiGateway 'HTTPS/JSON'
+  saferide.driverApp -> saferide.apiGateway 'HTTPS/JSON'
+  saferide.adminWeb -> saferide.apiGateway 'HTTPS/JSON'
+
+  saferide.familyApp -> saferide.appsync 'Subscribe: posicao ao vivo'
+  saferide.driverApp -> saferide.gpsStream 'Publish: telemetria GPS'
+  saferide.driverApp -> saferide.appsync 'Subscribe: eventos de corrida'
+
+  saferide.apiGateway -> saferide.cognito 'Valida JWT'
+  saferide.familyApp -> saferide.cognito 'SignIn / SignUp'
+  saferide.driverApp -> saferide.cognito 'SignIn / SignUp'
+  saferide.adminWeb -> saferide.cognito 'SignIn'
+
+  saferide -> aws 'Runs on'
+  saferide -> gmaps 'Directions / Geocoding / Distance Matrix'
+  saferide -> fcm 'Envia push notifications'
+  saferide -> paymentGateway 'Cobranca, custodia, transfer'
+  saferide -> faceProvider 'Embedding + verificacao facial'
+  saferide -> backgroundCheck 'Consulta antecedentes'
+  saferide -> nfse 'Emissao de NFS-e'
+}
