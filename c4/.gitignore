@@ -1,4 +1,8 @@
 node_modules/
-dist/
 *.log
 .likec4cache/
+
+# Ignore build outputs, but keep the portable single-file deliverable tracked
+dist/*
+!dist/index.html
+!dist/favicon*
