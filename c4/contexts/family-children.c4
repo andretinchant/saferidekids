@@ -1,0 +1,46 @@
+model {
+  extend saferide {
+    familyChildren = context 'Family & Children' {
+      description 'Cadastro de familia, filhos, escola, endereco, foto facial e flag de embarque configuravel.'
+
+      registerFamilyFn = component 'RegisterFamilyFunction' {
+        description 'Cria perfil de familia completo.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      addChildFn = component 'AddChildFunction' {
+        description 'Adiciona filho ao perfil (nome, escola, necessidades).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      uploadChildPhotoFn = component 'UploadChildPhotoFunction' {
+        description 'Upload das 3-5 fotos faciais e geracao do embedding via provedor externo.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      configureBoardingFn = component 'ConfigureBoardingModeFunction' {
+        description 'Configura flag de embarque (manual | facial | tag) por filho ou familia.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      familyStore = component 'FamilyStore' {
+        description 'Entidades relacionais: familia, filhos, endereco, escola.'
+        technology 'PostgreSQL table (tenantId, familyId)'
+      }
+      embeddingStore = component 'ChildEmbeddingStore' {
+        description 'Embeddings faciais cifrados (nunca fotos raw).'
+        technology 'S3 bucket (AES-256 at rest)'
+      }
+
+      registerFamilyFn -> familyStore 'INSERT family'
+      addChildFn -> familyStore 'INSERT child'
+      uploadChildPhotoFn -> faceProvider 'Gera embedding'
+      uploadChildPhotoFn -> embeddingStore 'PutObject (cifrado)'
+      configureBoardingFn -> familyStore 'UPDATE boarding_mode'
+    }
+  }
+
+  saferide.apiGateway -> saferide.familyChildren.registerFamilyFn 'POST /family'
+  saferide.apiGateway -> saferide.familyChildren.addChildFn 'POST /family/children'
+  saferide.apiGateway -> saferide.familyChildren.uploadChildPhotoFn 'POST /family/children/{id}/photo'
+  saferide.apiGateway -> saferide.familyChildren.configureBoardingFn 'PUT /family/children/{id}/boarding-mode'
+
+  saferide.familyChildren.familyStore -> saferide.postgres 'Table owner'
+  saferide.familyChildren.embeddingStore -> saferide.s3 'Bucket'
+}
