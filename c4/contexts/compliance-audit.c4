@@ -1,0 +1,45 @@
+model {
+  extend saferide {
+    complianceAudit = context 'Compliance & Audit' {
+      description 'Trilhas de auditoria, DPIA, retencao LGPD, canal de denuncia, botao de emergencia, logs invioaveis.'
+
+      recordAuditFn = component 'RecordAuditEventFunction' {
+        description 'Consumer generico de eventos sensiveis; grava trilha append-only.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      dsrFn = component 'HandleDataSubjectRequestFunction' {
+        description 'LGPD: atendimento a solicitacoes de titular (acesso, retificacao, exclusao).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      retentionFn = component 'RunRetentionPolicyFunction' {
+        description 'Agendado: aplica politicas de retencao e deleta dados vencidos.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      emergencyFn = component 'RaiseEmergencyFunction' {
+        description 'Botao de emergencia do app familia/motorista; notifica operator imediatamente.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      auditDb = component 'AuditLogStoreDB' {
+        description 'Indice de trilhas (pesquisavel).'
+        technology 'PostgreSQL schema'
+      }
+      auditArchive = component 'AuditArchive' {
+        description 'Arquivamento imutavel (S3 Object Lock em modo compliance).'
+        technology 'S3 bucket com Object Lock'
+      }
+
+      recordAuditFn -> eventBus 'Subscribe: eventos sensiveis'
+      recordAuditFn -> auditDb 'INSERT audit entry'
+      recordAuditFn -> auditArchive 'PutObject (append-only)'
+      dsrFn -> auditDb 'Consulta'
+      retentionFn -> auditDb 'Deleta vencidos'
+      emergencyFn -> eventBus 'Publish: EmergencyRaised'
+    }
+  }
+
+  saferide.apiGateway -> saferide.complianceAudit.dsrFn 'POST /dsr/{type}'
+  saferide.apiGateway -> saferide.complianceAudit.emergencyFn 'POST /emergency'
+
+  saferide.complianceAudit.auditDb -> saferide.postgres 'Schema owner'
+  saferide.complianceAudit.auditArchive -> saferide.s3 'Bucket'
+}
