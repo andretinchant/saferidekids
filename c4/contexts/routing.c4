@@ -1,0 +1,40 @@
+model {
+  extend saferide {
+    routing = context 'Routing' {
+      description 'Otimizacao de rotas multi-aluno, geofencing, ETA, deteccao de desvio.'
+
+      planRouteFn = component 'PlanRouteFunction' {
+        description 'Calcula rota otimizada entre alunos do contrato e destino (escola).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      computeEtaFn = component 'ComputeETAFunction' {
+        description 'Calcula ETA dinamico considerando trafego em tempo real.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      checkGeofenceFn = component 'CheckGeofenceFunction' {
+        description 'Detecta entrada/saida nos raios de 200m (casa/escola) a partir da telemetria.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      detectDeviationFn = component 'DetectRouteDeviationFunction' {
+        description 'Alerta se a van se desviar > 500m da rota planejada.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      routeCache = component 'RouteCache' {
+        description 'Cache de rotas calculadas (reduz custo Google Maps).'
+        technology 'DynamoDB table com TTL'
+      }
+
+      planRouteFn -> gmaps 'Directions + Distance Matrix'
+      planRouteFn -> routeCache 'Put/Get'
+      planRouteFn -> eventBus 'Publish: RoutePlanned'
+      computeEtaFn -> gmaps 'Directions (real-time traffic)'
+      checkGeofenceFn -> eventBus 'Publish: GeofenceEntered'
+      detectDeviationFn -> eventBus 'Publish: LocationDeviated'
+    }
+  }
+
+  saferide.apiGateway -> saferide.routing.planRouteFn 'POST /routes/plan'
+  saferide.apiGateway -> saferide.routing.computeEtaFn 'GET /routes/{id}/eta'
+
+  saferide.routing.routeCache -> saferide.dynamo 'Table owner'
+}
