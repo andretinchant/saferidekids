@@ -20,15 +20,23 @@ O C4 está em [`c4/`](c4/), escrito em [Likec4](https://likec4.dev/). Para gerar
 - Node.js 20+
 - npm
 
-### Gerar SPA estática (entrega aos stakeholders)
+### Gerar HTML portátil (entrega aos stakeholders)
 
 ```bash
 cd c4
 npm install
+npm run build:portable
+```
+
+Gera **um único arquivo** `c4/dist/index.html` (~4 MB com tudo inline — JS, CSS, SVG). Abre direto em qualquer navegador via `file://` — **sem servidor, sem internet, sem dependências**. Ideal para pendrive, email ou pasta compartilhada.
+
+### Gerar SPA multi-arquivo (para hospedar em servidor)
+
+```bash
 npm run build
 ```
 
-O resultado fica em `c4/dist/`. Basta abrir `c4/dist/index.html` em qualquer navegador — **sem servidor, sem internet, sem dependências**. Ideal para apresentar em qualquer laptop (pendrive, email, pasta compartilhada).
+Gera estrutura multi-arquivo em `c4/dist/` otimizada para hospedagem (GitHub Pages, S3, etc.). Requer servir via HTTP — não abre em `file://`. Para testar localmente: `npm run preview`.
 
 ### Modo dev (navegação interativa com hot-reload)
 

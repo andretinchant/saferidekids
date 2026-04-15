@@ -5,7 +5,9 @@
   "description": "SafeRide Kids navigable C4 model",
   "scripts": {
     "build": "likec4 build -o dist",
+    "build:portable": "likec4 build --output-single-file -o dist",
     "start": "likec4 start",
+    "preview": "likec4 preview",
     "validate": "likec4 validate",
     "export:png": "likec4 export png -o dist/png",
     "export:svg": "likec4 export svg -o dist/svg"
