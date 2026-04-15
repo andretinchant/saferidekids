@@ -1,0 +1,48 @@
+model {
+  extend saferide {
+    reputationRating = context 'Reputation & Rating' {
+      description 'Avaliacoes, inspecoes de veiculo, metricas de qualidade. Alimenta Matching & Bidding (scoring, gate de renovacao) e Admin (dashboards).'
+
+      submitRatingFn = component 'SubmitRatingFunction' {
+        description 'Pai avalia motorista pos-trajeto ou pos-contrato.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      recordIncidentFn = component 'RecordIncidentFunction' {
+        description 'Registra incidente reportado (atraso, conduta, acidente).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      runInspectionFn = component 'RunVehicleInspectionFunction' {
+        description 'Inspecao periodica do veiculo (upload de fotos, checklist).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      computeScoreFn = component 'ComputeDriverScoreFunction' {
+        description 'Agrega historico em score consolidado consumido pelo Matching.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      evaluateSatisfactionFn = component 'EvaluateFamilySatisfactionFunction' {
+        description 'Gate da renovacao: avalia satisfacao agregada das familias para decidir se oferece renovacao.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      ratingStore = component 'RatingStore' {
+        description 'Ratings, inspecoes, incidentes, scores computados.'
+        technology 'DynamoDB table (tenantId, driverId)'
+      }
+
+      submitRatingFn -> ratingStore 'Insert rating'
+      submitRatingFn -> eventBus 'Publish: RatingSubmitted'
+      recordIncidentFn -> ratingStore 'Insert incident'
+      recordIncidentFn -> eventBus 'Publish: IncidentRecorded'
+      runInspectionFn -> ratingStore 'Insert inspection'
+      runInspectionFn -> eventBus 'Publish: InspectionCompleted'
+      computeScoreFn -> ratingStore 'Read + Write aggregated score'
+      evaluateSatisfactionFn -> ratingStore 'Read aggregated metrics'
+      evaluateSatisfactionFn -> eventBus 'Publish: SatisfactionEvaluated'
+    }
+  }
+
+  saferide.apiGateway -> saferide.reputationRating.submitRatingFn 'POST /ratings'
+  saferide.apiGateway -> saferide.reputationRating.recordIncidentFn 'POST /incidents'
+  saferide.apiGateway -> saferide.reputationRating.runInspectionFn 'POST /inspections'
+
+  saferide.reputationRating.ratingStore -> saferide.dynamo 'Table owner'
+}
