@@ -1,0 +1,53 @@
+model {
+  extend saferide {
+    driverOnboarding = context 'Driver Onboarding' {
+      description 'Cadastro rigoroso de motoristas: CNH D/E, antecedentes, vistoria, fotos, alvara, seguro.'
+
+      submitAppFn = component 'SubmitDriverApplicationFunction' {
+        description 'Motorista inicia o processo de cadastro.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      uploadDocFn = component 'UploadDocumentFunction' {
+        description 'Upload de CNH, comprovante, vistoria, fotos do veiculo.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      requestBgCheckFn = component 'RequestBackgroundCheckFunction' {
+        description 'Aciona provedor externo para verificacao de antecedentes.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      validateDocFn = component 'ValidateDocumentFunction' {
+        description 'OCR + regras de validacao de documentos.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      approveDriverFn = component 'ApproveDriverFunction' {
+        description 'Workflow final (automatizado + revisao manual operator).'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      documentMetaStore = component 'DriverDocumentMetadata' {
+        description 'Indice de documentos, status de validacao, historico.'
+        technology 'PostgreSQL table (tenantId, driverId)'
+      }
+      documentBlobStore = component 'DriverDocumentBlobs' {
+        description 'Arquivos (PDF/JPG) de documentos enviados.'
+        technology 'S3 bucket'
+      }
+
+      submitAppFn -> documentMetaStore 'Cria registro de application'
+      uploadDocFn -> documentBlobStore 'PutObject'
+      uploadDocFn -> documentMetaStore 'Atualiza metadata'
+      validateDocFn -> documentMetaStore 'Marca documento como validado/rejeitado'
+      requestBgCheckFn -> backgroundCheck 'Consulta antecedentes'
+      requestBgCheckFn -> documentMetaStore 'Registra resultado'
+      approveDriverFn -> documentMetaStore 'Marca driver como approved'
+      approveDriverFn -> eventBus 'Publish: DriverApproved'
+    }
+  }
+
+  saferide.apiGateway -> saferide.driverOnboarding.submitAppFn 'POST /driver/apply'
+  saferide.apiGateway -> saferide.driverOnboarding.uploadDocFn 'POST /driver/documents'
+  saferide.apiGateway -> saferide.driverOnboarding.requestBgCheckFn 'POST /driver/background-check'
+  saferide.apiGateway -> saferide.driverOnboarding.approveDriverFn 'POST /driver/approve (admin)'
+
+  saferide.driverOnboarding.documentMetaStore -> saferide.postgres 'Table owner'
+  saferide.driverOnboarding.documentBlobStore -> saferide.s3 'Bucket'
+}
