@@ -1,0 +1,68 @@
+model {
+  extend saferide {
+    matchingBidding = context 'Matching & Bidding' {
+      description 'Nucleo do marketplace: leilao reverso por janela + renovacao com preco fixo. Scoring ponderado (lance + nota + condicao do veiculo + historico).'
+
+      openBidWindowFn = component 'OpenBidWindowFunction' {
+        description 'Abre leilao para um contrato-familia recem-criado ou janela encerrada sem renovacao.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      notifyEligibleDriversFn = component 'NotifyEligibleDriversFunction' {
+        description 'Seleciona motoristas elegiveis pela regiao/score e notifica.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      submitBidFn = component 'SubmitBidFunction' {
+        description 'Motorista envia lance para uma BidWindow aberta.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      scoringEngineFn = component 'ScoringEngineFunction' {
+        description 'Aplica pesos versionados (lance, nota, veiculo, historico) e ranqueia lances.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      awardAssignmentFn = component 'AwardAssignmentFunction' {
+        description 'Seleciona vencedor do leilao e emite ServiceAssignment.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      offerRenewalFn = component 'OfferRenewalFunction' {
+        description 'Propoe renovacao com preco fixo ao motorista atual se satisfacao e adequada.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      acceptRenewalFn = component 'AcceptRenewalFunction' {
+        description 'Motorista aceita renovacao.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      declineRenewalFn = component 'DeclineRenewalFunction' {
+        description 'Motorista recusa renovacao; volta para fluxo de leilao.'
+        technology 'AWS Lambda (.NET 8)'
+      }
+      bidStore = component 'BidStore' {
+        description 'BidWindows ativas e historico de lances.'
+        technology 'DynamoDB table (tenantId, bidWindowId)'
+      }
+      scoringRulesStore = component 'ScoringRulesStore' {
+        description 'Pesos versionados do scoring (config gerenciada pelo Admin).'
+        technology 'PostgreSQL table (tenantId, version)'
+      }
+
+      openBidWindowFn -> bidStore 'Cria BidWindow'
+      openBidWindowFn -> eventBus 'Publish: BidWindowOpened'
+      notifyEligibleDriversFn -> eventBus 'Subscribe: BidWindowOpened'
+      submitBidFn -> bidStore 'Insere lance'
+      submitBidFn -> eventBus 'Publish: BidSubmitted'
+      scoringEngineFn -> scoringRulesStore 'Le versao ativa'
+      scoringEngineFn -> bidStore 'Le lances'
+      awardAssignmentFn -> scoringEngineFn 'Invoca'
+      awardAssignmentFn -> eventBus 'Publish: ServiceAssignmentAwarded'
+      offerRenewalFn -> eventBus 'Publish: RenewalOffered'
+      acceptRenewalFn -> eventBus 'Publish: RenewalAccepted'
+      declineRenewalFn -> eventBus 'Publish: RenewalDeclined'
+    }
+  }
+
+  saferide.apiGateway -> saferide.matchingBidding.submitBidFn 'POST /bids'
+  saferide.apiGateway -> saferide.matchingBidding.acceptRenewalFn 'POST /renewals/{id}/accept'
+  saferide.apiGateway -> saferide.matchingBidding.declineRenewalFn 'POST /renewals/{id}/decline'
+
+  saferide.matchingBidding.bidStore -> saferide.dynamo 'Table owner'
+  saferide.matchingBidding.scoringRulesStore -> saferide.postgres 'Table owner'
+}
