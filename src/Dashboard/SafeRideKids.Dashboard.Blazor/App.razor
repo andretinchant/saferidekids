@@ -1,0 +1,26 @@
+@* App.razor — raiz do roteamento Blazor. Inclui Cascading AuthenticationState. *@
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @* Sem token válido → manda para tela de login. *@
+                    <RedirectToLogin />
+                </NotAuthorized>
+                <Authorizing>
+                    <MudProgressLinear Indeterminate="true" />
+                </Authorizing>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Página não encontrada — SafeRide Kids</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <MudPaper Class="pa-4 ma-4">
+                    <MudText Typo="Typo.h5">Página não encontrada.</MudText>
+                    <MudText Typo="Typo.body1">Volte para a página inicial.</MudText>
+                </MudPaper>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

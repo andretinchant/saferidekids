@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Paleta primaria — verde de transporte (acessibilidade: contraste AA em branco) -->
+    <Color x:Key="Primary">#1B5E20</Color>
+    <Color x:Key="PrimaryDark">#003300</Color>
+    <Color x:Key="PrimaryLight">#4C8C4A</Color>
+
+    <Color x:Key="Secondary">#FFC107</Color>
+    <Color x:Key="Tertiary">#0277BD</Color>
+
+    <!-- Status — usados em historico e banners -->
+    <Color x:Key="StatusApprovedColor">#2E7D32</Color>
+    <Color x:Key="StatusFallbackOkColor">#558B2F</Color>
+    <Color x:Key="StatusInconclusiveColor">#FB8C00</Color>
+    <Color x:Key="StatusRejectedColor">#C62828</Color>
+    <Color x:Key="StatusPendingSyncColor">#6A1B9A</Color>
+
+    <!-- Cinza scale -->
+    <Color x:Key="Gray100">#F5F5F5</Color>
+    <Color x:Key="Gray200">#E0E0E0</Color>
+    <Color x:Key="Gray400">#BDBDBD</Color>
+    <Color x:Key="Gray500">#9E9E9E</Color>
+    <Color x:Key="Gray700">#616161</Color>
+    <Color x:Key="Gray900">#212121</Color>
+
+    <!-- Superficies (claro/escuro) -->
+    <Color x:Key="Background">#FAFAFA</Color>
+    <Color x:Key="Surface">#FFFFFF</Color>
+    <Color x:Key="BackgroundDark">#121212</Color>
+    <Color x:Key="SurfaceDark">#1E1E1E</Color>
+
+    <!-- Brushes equivalentes para Style.TriggerSetter compativel -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}" />
+
+</ResourceDictionary>

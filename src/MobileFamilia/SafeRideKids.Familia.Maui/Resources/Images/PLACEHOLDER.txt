@@ -1,0 +1,2 @@
+Adicione aqui imagens (.png/.svg) referenciadas pelas views.
+A POC nao depende de nenhuma imagem alem do appicon/splash.

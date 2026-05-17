@@ -1,0 +1,21 @@
+@* Badge para identificar visualmente o provedor: aws-rekognition / unico-idcloud. *@
+
+<MudChip Color="@_color" Size="Size.Small" Variant="Variant.Outlined" Icon="@_icon">@_label</MudChip>
+
+@code {
+    [Parameter] public string? ProviderId { get; set; }
+
+    private string _label = "—";
+    private string _icon = Icons.Material.Filled.Help;
+    private Color _color = Color.Default;
+
+    protected override void OnParametersSet()
+    {
+        (_label, _color, _icon) = (ProviderId ?? string.Empty).ToLowerInvariant() switch
+        {
+            "aws-rekognition" => ("AWS Rekognition", Color.Warning, Icons.Material.Filled.Cloud),
+            "unico-idcloud"   => ("Unico IDCloud", Color.Info, Icons.Material.Filled.VerifiedUser),
+            _                 => ("—", Color.Default, Icons.Material.Filled.Help)
+        };
+    }
+}

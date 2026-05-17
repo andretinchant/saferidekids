@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SafeRideKids.Poc.Infra</RootNamespace>
+    <AssemblyName>SafeRideKids.Poc.Infra</AssemblyName>
+    <!-- AWS CDK gera muitos warnings via metadata; manter como avisos por enquanto -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      AWS CDK v2 (monolito) — todas as construções (L1/L2) num único pacote.
+      Versão pinada para evitar quebras silenciosas entre agentes/CI.
+    -->
+    <PackageReference Include="Amazon.CDK.Lib" Version="2.155.0" />
+    <PackageReference Include="Constructs" Version="10.3.0" />
+  </ItemGroup>
+
+</Project>

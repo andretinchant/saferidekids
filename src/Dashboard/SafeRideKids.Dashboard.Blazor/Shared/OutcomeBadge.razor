@@ -1,0 +1,22 @@
+@* Badge colorido para outcome de check-in: approved/inconclusive/rejected/fallback. *@
+
+<MudChip Color="@_color" Size="Size.Small" Variant="Variant.Filled">@_label</MudChip>
+
+@code {
+    [Parameter] public string? Outcome { get; set; }
+
+    private string _label = "—";
+    private Color _color = Color.Default;
+
+    protected override void OnParametersSet()
+    {
+        (_label, _color) = (Outcome ?? string.Empty).ToLowerInvariant() switch
+        {
+            "approved"     => ("Aprovado", Color.Success),
+            "inconclusive" => ("Inconclusivo", Color.Warning),
+            "rejected"     => ("Rejeitado", Color.Error),
+            "fallback"     => ("Fallback", Color.Info),
+            _              => ("—", Color.Default)
+        };
+    }
+}

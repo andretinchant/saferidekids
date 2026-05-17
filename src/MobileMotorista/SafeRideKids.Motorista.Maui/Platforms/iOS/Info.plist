@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>1</integer>
+		<integer>2</integer>
+	</array>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>XSAppIconAssets</key>
+	<string>Assets.xcassets/appicon.appiconset</string>
+
+	<!-- LGPD/transparencia: motivos legitimos por permissao. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Necessario para capturar o rosto da crianca no embarque (biometria) e foto opcional de auditoria em caso de fallback manual. Imagens nao sao armazenadas no dispositivo.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Registra a localizacao do embarque para auditoria da rota. A localizacao e usada apenas no momento do check-in.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Apenas se voce optar por anexar uma foto de auditoria a partir da biblioteca.</string>
+</dict>
+</plist>

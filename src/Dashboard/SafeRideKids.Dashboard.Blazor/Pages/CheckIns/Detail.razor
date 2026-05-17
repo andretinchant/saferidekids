@@ -1,0 +1,172 @@
+@page "/checkins/{Id:guid}"
+@attribute [Authorize]
+@inject IBackendApi Api
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>Detalhe do check-in — SafeRide Kids</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Nav.NavigateTo("/checkins"))" />
+    <MudText Typo="Typo.h4">Detalhe do check-in</MudText>
+</MudStack>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_detail is not null)
+{
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Resumo</MudText>
+                <MudList Dense="true">
+                    <MudListItem Icon="@Icons.Material.Filled.Fingerprint">
+                        ID: <code>@_detail.Id</code>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.AccessTime">
+                        Início: @_detail.StartedAt.LocalDateTime.ToString("dd/MM/yyyy HH:mm:ss")
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">
+                        Fim: @(_detail.FinishedAt?.LocalDateTime.ToString("dd/MM/yyyy HH:mm:ss") ?? "—")
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.AssignmentTurnedIn">
+                        Resultado: <OutcomeBadge Outcome="@_detail.Result" />
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Cloud">
+                        Provedor: <ProviderBadge ProviderId="@_detail.ProviderId" />
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.AutoGraph">
+                        Confiança: @(_detail.Confidence is null ? "—" : $"{_detail.Confidence * 100:F2}%")
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Speed">
+                        Latência: @(_detail.LatencyMs is null ? "—" : $"{_detail.LatencyMs} ms")
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.SyncProblem">
+                        Fallback: @(_detail.UsedFallback ? _detail.FallbackType ?? "sim" : "não")
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.AttachMoney">
+                        Custo estimado: @(_detail.ProviderCostMicroCents is null ? "—" :
+                            $"{(_detail.ProviderCostMicroCents.Value / 1_000_000d):C4}")
+                    </MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Contexto operacional</MudText>
+                <MudList Dense="true">
+                    <MudListItem Icon="@Icons.Material.Filled.ChildCare">
+                        Criança:
+                        <PiiReveal InitialsOrMasked="@_detail.ChildDisplayInitials"
+                                   RevealAsync="@(() => RevealChildName(_detail.ChildId))" />
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Route">
+                        Rota: <code>@_detail.RouteId</code>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.PinDrop">
+                        Parada: <code>@_detail.RouteStopId</code>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.LocalShipping">
+                        Motorista (hash): <code>@_detail.MotoristaIdHash</code>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Place">
+                        GPS: @(_detail.GeoLat is null ? "—" : $"{_detail.GeoLat:F6}, {_detail.GeoLng:F6}")
+                    </MudListItem>
+                    @if (!string.IsNullOrEmpty(_detail.Notes))
+                    {
+                        <MudListItem Icon="@Icons.Material.Filled.Notes">
+                            Notas: @_detail.Notes
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Timeline de eventos</MudText>
+                @if (_detail.Events.Count == 0)
+                {
+                    <MudText Typo="Typo.body2">Nenhum evento registrado.</MudText>
+                }
+                else
+                {
+                    <MudTimeline TimelinePosition="TimelinePosition.Start" TimelineAlign="TimelineAlign.Default">
+                        @foreach (var ev in _detail.Events)
+                        {
+                            <MudTimelineItem Color="@ColorForEvent(ev.EventType)" Size="Size.Small">
+                                <ItemContent>
+                                    <MudText Typo="Typo.subtitle2">@ev.EventType</MudText>
+                                    <MudText Typo="Typo.caption">@ev.OccurredAt.LocalDateTime.ToString("dd/MM HH:mm:ss.fff")</MudText>
+                                    @if (!string.IsNullOrWhiteSpace(ev.PayloadJson) && ev.PayloadJson != "{}")
+                                    {
+                                        <MudExpansionPanels Elevation="0">
+                                            <MudExpansionPanel Text="Payload">
+                                                <pre style="white-space:pre-wrap;font-size:0.8rem;">@ev.PayloadJson</pre>
+                                            </MudExpansionPanel>
+                                        </MudExpansionPanels>
+                                    }
+                                </ItemContent>
+                            </MudTimelineItem>
+                        }
+                    </MudTimeline>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+else
+{
+    <MudAlert Severity="Severity.Error">Check-in não encontrado.</MudAlert>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private bool _loading = true;
+    private CheckInDetail? _detail;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        try
+        {
+            _detail = await Api.GetCheckInDetailAsync(Id, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar detalhe: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task<string?> RevealChildName(Guid childId)
+    {
+        try
+        {
+            var resp = await Api.RevealChildDisplayNameAsync(childId, CancellationToken.None);
+            Snackbar.Add("Acesso registrado em audit_log.", Severity.Info);
+            return resp.DisplayName;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Falha ao revelar nome: {ex.Message}", Severity.Error);
+            return null;
+        }
+    }
+
+    private static Color ColorForEvent(string evType) => evType switch
+    {
+        var s when s.Contains("Failed", StringComparison.OrdinalIgnoreCase)   => Color.Error,
+        var s when s.Contains("Fallback", StringComparison.OrdinalIgnoreCase) => Color.Warning,
+        var s when s.Contains("Ok", StringComparison.OrdinalIgnoreCase)
+                || s.Contains("Approved", StringComparison.OrdinalIgnoreCase) => Color.Success,
+        _                                                                     => Color.Primary
+    };
+}

@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>SafeRideKids.Biometria.Tests</RootNamespace>
+    <AssemblyName>SafeRideKids.Biometria.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SafeRideKids.Biometria.Api\SafeRideKids.Biometria.Api.csproj" />
+    <ProjectReference Include="..\SafeRideKids.Biometria.Core\SafeRideKids.Biometria.Core.csproj" />
+    <ProjectReference Include="..\SafeRideKids.Biometria.Infrastructure\SafeRideKids.Biometria.Infrastructure.csproj" />
+    <ProjectReference Include="..\SafeRideKids.Biometria.Providers.Aws\SafeRideKids.Biometria.Providers.Aws.csproj" />
+    <ProjectReference Include="..\SafeRideKids.Biometria.Providers.Unico\SafeRideKids.Biometria.Providers.Unico.csproj" />
+    <ProjectReference Include="..\SafeRideKids.Biometria.Providers.Stubs\SafeRideKids.Biometria.Providers.Stubs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="FluentAssertions" Version="6.12.1" />
+    <PackageReference Include="NSubstitute" Version="5.1.0" />
+    <PackageReference Include="Bogus" Version="35.6.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+</Project>

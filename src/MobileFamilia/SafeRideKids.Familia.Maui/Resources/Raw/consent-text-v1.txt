@@ -1,0 +1,58 @@
+TERMO DE CONSENTIMENTO PARA TRATAMENTO DE BIOMETRIA FACIAL DE CRIANÇA
+Versão: v1 — SafeRide Kids POC
+
+Eu, responsável legal pela criança indicada neste cadastro, declaro que li este termo na íntegra e autorizo, de forma livre, informada, expressa e destacada, o tratamento dos dados pessoais sensíveis descritos a seguir, nos termos da Lei nº 13.709/2018 (Lei Geral de Proteção de Dados Pessoais — LGPD), em especial dos artigos 7º, 11, 14 e seguintes, e em observância ao melhor interesse da criança previsto no Estatuto da Criança e do Adolescente.
+
+1. CONTROLADOR
+SafeRide Kids — Prova de Conceito (POC). Esta é uma versão de testes destinada exclusivamente a participantes voluntários adultos durante a Fase A. O uso com crianças somente ocorrerá após aprovação de Relatório de Impacto à Proteção de Dados Pessoais (RIPD/DPIA) e mediante consentimento expresso e específico do responsável legal.
+
+2. ENCARREGADO PELO TRATAMENTO DE DADOS (DPO)
+Você pode contatar nosso Encarregado pelo endereço dpo@saferidekids.example para exercer seus direitos, esclarecer dúvidas ou apresentar reclamações.
+
+3. FINALIDADE
+Os dados serão usados exclusivamente para verificação biométrica 1:1 no momento do embarque escolar, confirmando se a criança apresentada ao motorista é a esperada para aquela parada da rota. Não realizamos identificação em base aberta (1:N) nem cruzamento com outras bases de pessoas.
+
+4. NATUREZA DOS DADOS TRATADOS
+Imagem facial da criança capturada na etapa de cadastro (3 a 5 fotos), processada para gerar um modelo matemático (template ou embedding) que permite a comparação posterior. Esses dados são classificados como pessoais sensíveis pelo art. 11 da LGPD e recebem proteção reforçada por se tratarem de criança ou adolescente.
+
+5. BASE LEGAL
+Consentimento específico e destacado do responsável legal (LGPD, art. 11, I e art. 14, §1º), respeitando sempre o melhor interesse da criança. O tratamento jamais ocorrerá com base legal diversa para esta finalidade.
+
+6. COMPARTILHAMENTO E PROVEDORES OPERADORES
+Para a verificação biométrica utilizamos serviços de provedores especializados, contratualmente vinculados a obrigações de proteção de dados:
+- Amazon Web Services Brasil (AWS Rekognition) — operador.
+- Unico IDtech (Unico IDCloud) — operador.
+Para fins desta POC, ambos podem ser acionados em paralelo a fim de comparar acurácia e custo, sempre em modo 1:1. Nenhum outro compartilhamento é realizado. Não vendemos, alugamos ou cedemos dados a terceiros.
+
+7. ARMAZENAMENTO E SEGURANÇA
+As imagens originais (fotos) NÃO são armazenadas em disco no celular. Não persistimos imagens cruas em nossos servidores: o que armazenamos são templates/embeddings cifrados com chave gerenciada (AWS KMS). O acesso é restrito por perfil, com registro auditável.
+
+8. PRAZO DE RETENÇÃO
+O cadastro facial é válido por 6 (seis) meses contados da sua criação. Após esse período é automaticamente expirado e excluído, exigindo novo consentimento e novo cadastro caso você queira continuar utilizando o serviço. Em caso de revogação do consentimento, a exclusão ocorre imediatamente.
+
+9. DIREITOS DO TITULAR
+Você, na qualidade de responsável legal, pode a qualquer momento, e sem prejuízo, exercer os direitos previstos no art. 18 da LGPD, incluindo:
+- Confirmação da existência de tratamento;
+- Acesso aos dados;
+- Correção de dados incompletos, inexatos ou desatualizados;
+- Eliminação dos dados pessoais (DSR-delete);
+- Portabilidade dos dados a outro fornecedor de serviço;
+- Revogação do consentimento, a qualquer tempo, com efeitos prospectivos;
+- Informação sobre uso compartilhado;
+- Oposição ao tratamento em hipóteses de descumprimento da lei.
+O exercício destes direitos pode ser feito diretamente pelo aplicativo, na tela "Detalhes da criança", ou por e-mail ao Encarregado (DPO).
+
+10. FALLBACK E NÃO-EXCLUSIVIDADE DA BIOMETRIA
+A verificação biométrica nunca é o único fator de embarque. Em caso de inconclusividade, indisponibilidade técnica ou recusa, o motorista utilizará mecanismos alternativos auditáveis (PIN de uso único enviado ao responsável, lista de pessoas autorizadas previamente cadastradas, ou confirmação manual com justificativa registrada).
+
+11. DECISÕES AUTOMATIZADAS
+A pontuação retornada pelo provedor pode resultar em três estados: aprovação, inconclusivo ou rejeição. Em qualquer caso há possibilidade de revisão humana imediata pelo motorista, com registro auditável. Você tem direito a solicitar revisão de decisões tomadas exclusivamente com base em tratamento automatizado (LGPD, art. 20).
+
+12. CONSEQUÊNCIAS DA NÃO AUTORIZAÇÃO
+Caso não consinta, a verificação biométrica não será realizada e o embarque continuará ocorrendo pelos mecanismos tradicionais (lista autorizada, confirmação manual). O não consentimento não impede o uso do serviço de transporte escolar.
+
+13. INTEGRIDADE DESTE TERMO
+Este termo é versionado. O hash criptográfico (SHA-256) do texto exibido nesta tela é registrado junto da sua assinatura eletrônica, juntamente com data e hora, para fins de auditoria. Qualquer alteração futura no texto requer novo consentimento.
+
+DECLARAÇÃO FINAL
+Ao marcar "Li, entendi e aceito os termos acima" e informar meu CPF, declaro estar ciente do conteúdo deste termo, ser o responsável legal pela criança cadastrada, e autorizar o tratamento descrito até que eu revogue este consentimento.

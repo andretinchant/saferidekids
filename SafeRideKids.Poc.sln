@@ -1,0 +1,74 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0001}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafeRideKids.Biometria.Api", "src\Backend\SafeRideKids.Biometria.Api\SafeRideKids.Biometria.Api.csproj", "{1B0E0A11-1111-4A11-A111-0000000000A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafeRideKids.Biometria.Core", "src\Backend\SafeRideKids.Biometria.Core\SafeRideKids.Biometria.Core.csproj", "{1B0E0A11-1111-4A11-A111-0000000000A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafeRideKids.Biometria.Infrastructure", "src\Backend\SafeRideKids.Biometria.Infrastructure\SafeRideKids.Biometria.Infrastructure.csproj", "{1B0E0A11-1111-4A11-A111-0000000000A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafeRideKids.Biometria.Providers.Aws", "src\Backend\SafeRideKids.Biometria.Providers.Aws\SafeRideKids.Biometria.Providers.Aws.csproj", "{1B0E0A11-1111-4A11-A111-0000000000A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafeRideKids.Biometria.Providers.Unico", "src\Backend\SafeRideKids.Biometria.Providers.Unico\SafeRideKids.Biometria.Providers.Unico.csproj", "{1B0E0A11-1111-4A11-A111-0000000000A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafeRideKids.Biometria.Providers.Stubs", "src\Backend\SafeRideKids.Biometria.Providers.Stubs\SafeRideKids.Biometria.Providers.Stubs.csproj", "{1B0E0A11-1111-4A11-A111-0000000000A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafeRideKids.Biometria.Tests", "src\Backend\SafeRideKids.Biometria.Tests\SafeRideKids.Biometria.Tests.csproj", "{1B0E0A11-1111-4A11-A111-0000000000A7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1B0E0A11-1111-4A11-A111-0000000000A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0E0A11-1111-4A11-A111-0000000000A7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002} = {2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0001}
+		{1B0E0A11-1111-4A11-A111-0000000000A1} = {2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002}
+		{1B0E0A11-1111-4A11-A111-0000000000A2} = {2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002}
+		{1B0E0A11-1111-4A11-A111-0000000000A3} = {2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002}
+		{1B0E0A11-1111-4A11-A111-0000000000A4} = {2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002}
+		{1B0E0A11-1111-4A11-A111-0000000000A5} = {2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002}
+		{1B0E0A11-1111-4A11-A111-0000000000A6} = {2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002}
+		{1B0E0A11-1111-4A11-A111-0000000000A7} = {2B7F0E4F-1AAA-4B11-9C6E-0C5B0A1F0002}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0AAA0AAA-1111-2222-3333-44444444AAAA}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Familia.Maui.ViewModels"
+             x:Class="SafeRideKids.Familia.Maui.Views.ConsentPage"
+             x:DataType="vm:ConsentViewModel"
+             Title="Consentimento LGPD"
+             BackgroundColor="{StaticResource Background}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
+
+        <!-- Cabeçalho destacado -->
+        <Border Grid.Row="0"
+                Padding="12"
+                BackgroundColor="{StaticResource Highlight}"
+                Stroke="{StaticResource Primary}"
+                StrokeThickness="1">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Atenção: dado pessoal sensível"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Primary}" />
+                <Label Text="A biometria facial da criança é dado pessoal sensível (LGPD, Art. 11). Leia o texto integral antes de aceitar."
+                       FontSize="13" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Texto integral, rolável. Só libera a checkbox após scroll até o fim. -->
+        <ScrollView x:Name="ConsentScroll"
+                    Grid.Row="1"
+                    Margin="0,12,0,12"
+                    Scrolled="OnConsentScrolled">
+            <VerticalStackLayout Padding="4" Spacing="8">
+                <Label Text="{Binding ConsentTextVersion, StringFormat='Versão {0}'}"
+                       FontSize="11"
+                       TextColor="{StaticResource TextMuted}" />
+                <Label Text="{Binding ConsentTextBody}"
+                       FontSize="14"
+                       LineBreakMode="WordWrap" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Formulário + aceite -->
+        <VerticalStackLayout Grid.Row="2" Spacing="10">
+            <Entry Placeholder="Seu nome completo (responsável)"
+                   Text="{Binding GrantedBy, Mode=TwoWay}" />
+
+            <Entry x:Name="CpfEntry"
+                   Placeholder="CPF do responsável"
+                   Keyboard="Numeric"
+                   MaxLength="14"
+                   Text="{Binding CpfMasked, Mode=TwoWay}"
+                   TextChanged="OnCpfTextChanged" />
+
+            <HorizontalStackLayout Spacing="8">
+                <CheckBox IsEnabled="{Binding HasScrolledToEnd}"
+                          IsChecked="{Binding AcceptChecked, Mode=TwoWay}" />
+                <Label Text="Li, entendi e aceito os termos acima."
+                       VerticalOptions="Center"
+                       FontAttributes="Bold" />
+            </HorizontalStackLayout>
+
+            <Label Text="Role o texto até o fim para liberar o aceite."
+                   FontSize="11"
+                   TextColor="{StaticResource TextMuted}"
+                   IsVisible="{Binding HasScrolledToEnd, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <Label Text="{Binding ValidationMessage}"
+                   TextColor="{StaticResource Danger}"
+                   IsVisible="{Binding ValidationMessage, Converter={StaticResource StringNotEmptyConverter}}" />
+
+            <Button Text="Aceitar e continuar"
+                    Command="{Binding SubmitCommand}"
+                    Style="{StaticResource PrimaryButton}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

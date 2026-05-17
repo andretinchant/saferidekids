@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Familia.Maui.ViewModels"
+             xmlns:models="clr-namespace:SafeRideKids.Familia.Maui.Models"
+             x:Class="SafeRideKids.Familia.Maui.Views.MyChildrenPage"
+             x:Name="ThisPage"
+             x:DataType="vm:MyChildrenViewModel"
+             Title="Minhas Crianças"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Sair" Command="{Binding SignOutCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="*,Auto" Padding="0">
+
+        <RefreshView Grid.Row="0"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding Children}"
+                            SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="12" VerticalOptions="Center">
+                        <Label Text="Nenhuma criança cadastrada ainda."
+                               HorizontalTextAlignment="Center"
+                               FontAttributes="Bold" />
+                        <Label Text="Toque em + Adicionar criança para começar."
+                               HorizontalTextAlignment="Center"
+                               TextColor="{StaticResource TextMuted}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ChildSummary">
+                        <Border Margin="16,8" Padding="16"
+                                Stroke="{StaticResource SurfaceBorder}"
+                                StrokeThickness="1"
+                                BackgroundColor="{StaticResource Surface}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding BindingContext.OpenChildCommand, Source={x:Reference ThisPage}}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding DisplayName}"
+                                       FontAttributes="Bold"
+                                       FontSize="18" />
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding EnrollmentStatus}"
+                                       FontSize="12"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding School}"
+                                       FontSize="14"
+                                       TextColor="{StaticResource TextMuted}" />
+                                <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding BoardingMode, StringFormat='Embarque: {0}'}"
+                                       FontSize="12"
+                                       TextColor="{StaticResource TextMuted}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <Button Grid.Row="1"
+                Text="+ Adicionar criança"
+                Margin="16"
+                Command="{Binding AddChildCommand}"
+                Style="{StaticResource PrimaryButton}" />
+    </Grid>
+</ContentPage>

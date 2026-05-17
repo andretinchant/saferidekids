@@ -1,0 +1,11 @@
+@* Redirect helper invocado por App.razor quando o usuário não tem token. *@
+@inject NavigationManager Nav
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Mantém a URL original em returnUrl para reentrar após login.
+        var current = Uri.EscapeDataString(new Uri(Nav.Uri).PathAndQuery);
+        Nav.NavigateTo($"login?returnUrl={current}", forceLoad: true);
+    }
+}

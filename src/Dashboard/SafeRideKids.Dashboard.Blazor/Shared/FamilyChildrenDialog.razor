@@ -1,0 +1,111 @@
+@* Dialog modal: carrega crianças de uma família e permite revelar nome (audit). *@
+@inject IBackendApi Api
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-2">
+            Família: <code>@FamilyId</code> · email-hash: <code>@FamilyHash</code>
+        </MudText>
+
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" />
+        }
+        else if (_children is null || _children.Count == 0)
+        {
+            <MudText Typo="Typo.body2">Nenhuma criança encontrada.</MudText>
+        }
+        else
+        {
+            <MudSimpleTable Dense="true" Hover="true" Striped="true">
+                <thead>
+                    <tr>
+                        <th>Criança</th>
+                        <th>Ano nasc.</th>
+                        <th>Escola</th>
+                        <th>Modo</th>
+                        <th>Enrollments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in _children)
+                    {
+                        <tr>
+                            <td>
+                                <PiiReveal InitialsOrMasked="@c.DisplayInitials"
+                                           RevealAsync="@(() => RevealChildName(c.Id))" />
+                            </td>
+                            <td>@c.BirthYear</td>
+                            <td>@c.School</td>
+                            <td>@c.BoardingMode</td>
+                            <td>
+                                @foreach (var e in c.Enrollments)
+                                {
+                                    <MudChip Size="Size.Small" Class="ma-1" Color="@StatusColor(e.Status)">
+                                        @e.ProviderId : @e.Status
+                                    </MudChip>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Fechar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public Guid FamilyId { get; set; }
+    [Parameter] public string FamilyHash { get; set; } = string.Empty;
+
+    private bool _loading = true;
+    private IReadOnlyList<ChildListItem>? _children;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _children = await Api.GetChildrenByFamilyAsync(FamilyId, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar crianças: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task<string?> RevealChildName(Guid childId)
+    {
+        try
+        {
+            var resp = await Api.RevealChildDisplayNameAsync(childId, CancellationToken.None);
+            Snackbar.Add("Acesso registrado em audit_log.", Severity.Info);
+            return resp.DisplayName;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Falha ao revelar nome: {ex.Message}", Severity.Error);
+            return null;
+        }
+    }
+
+    private void Close() => MudDialog.Close(DialogResult.Ok(true));
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "active"   => Color.Success,
+        "expired"  => Color.Warning,
+        "deleted"  => Color.Error,
+        "failed"   => Color.Error,
+        _          => Color.Default
+    };
+}

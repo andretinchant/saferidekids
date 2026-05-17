@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Paleta SafeRide Kids -->
+    <Color x:Key="Primary">#1F5B8E</Color>
+    <Color x:Key="PrimaryDark">#13405F</Color>
+    <Color x:Key="Accent">#FFB300</Color>
+
+    <Color x:Key="Background">#F5F7FA</Color>
+    <Color x:Key="Surface">#FFFFFF</Color>
+    <Color x:Key="SurfaceBorder">#E1E4E8</Color>
+    <Color x:Key="Highlight">#E8F2FB</Color>
+
+    <Color x:Key="TextDefault">#101418</Color>
+    <Color x:Key="TextMuted">#5A6573</Color>
+
+    <Color x:Key="Danger">#C0392B</Color>
+    <Color x:Key="DangerSoft">#FBE7E5</Color>
+    <Color x:Key="Success">#1E8449</Color>
+
+</ResourceDictionary>

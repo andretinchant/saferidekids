@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Familia.Maui.ViewModels"
+             x:Class="SafeRideKids.Familia.Maui.Views.EnrollmentPage"
+             x:DataType="vm:EnrollmentViewModel"
+             Title="Cadastro facial"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Border Padding="12"
+                    BackgroundColor="{StaticResource Highlight}"
+                    Stroke="{StaticResource Primary}"
+                    StrokeThickness="1">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Etapa atual"
+                           FontAttributes="Bold"
+                           FontSize="13"
+                           TextColor="{StaticResource Primary}" />
+                    <Label Text="{Binding CurrentInstruction}" FontSize="16" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label FontSize="13" TextColor="{StaticResource TextMuted}">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Capturadas: " />
+                        <Span Text="{Binding CapturedCount}" FontAttributes="Bold" />
+                        <Span Text=" / " />
+                        <Span Text="{Binding MaxPhotosCount}" />
+                        <Span Text=" (mínimo " />
+                        <Span Text="{Binding MinPhotosCount}" />
+                        <Span Text=")" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+
+            <Button Text="Tirar foto"
+                    Command="{Binding CaptureCommand}"
+                    Style="{StaticResource PrimaryButton}" />
+
+            <Button Text="Refazer última"
+                    Command="{Binding RetakeLastCommand}"
+                    IsEnabled="{Binding CapturedCount, Converter={StaticResource IntGreaterThanZeroConverter}}" />
+
+            <CollectionView ItemsSource="{Binding Captures}">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical" Span="3" HorizontalItemSpacing="6" VerticalItemSpacing="6" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CapturedFrame">
+                        <Border Padding="4"
+                                Stroke="{StaticResource SurfaceBorder}"
+                                StrokeThickness="1"
+                                HeightRequest="120">
+                            <VerticalStackLayout Spacing="2" VerticalOptions="Center" HorizontalOptions="Center">
+                                <Label Text="{Binding Index, StringFormat='Foto #{0}'}"
+                                       FontAttributes="Bold"
+                                       HorizontalTextAlignment="Center" />
+                                <Label Text="Em memória"
+                                       FontSize="10"
+                                       TextColor="{StaticResource TextMuted}"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="Enviar para análise"
+                    Command="{Binding UploadCommand}"
+                    Style="{StaticResource PrimaryButton}"
+                    IsEnabled="{Binding HasMinimum}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" />
+
+            <Label Text="{Binding StatusMessage}"
+                   FontSize="13"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotEmptyConverter}}" />
+
+            <Label Text="Resultados por provedor" FontAttributes="Bold" Margin="0,12,0,0"
+                   IsVisible="{Binding Results.Count, Converter={StaticResource IntGreaterThanZeroConverter}}" />
+
+            <CollectionView ItemsSource="{Binding Results}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="10" Margin="0,4"
+                                Stroke="{StaticResource SurfaceBorder}"
+                                StrokeThickness="1"
+                                BackgroundColor="{StaticResource Surface}">
+                            <VerticalStackLayout Spacing="2">
+                                <Label FontAttributes="Bold"
+                                       Text="{Binding ProviderId}" />
+                                <Label FontSize="13"
+                                       Text="{Binding Status, StringFormat='Status: {0}'}" />
+                                <Label FontSize="11"
+                                       TextColor="{StaticResource TextMuted}"
+                                       Text="{Binding ErrorMessage}"
+                                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label Text="As fotos não são gravadas no celular. Elas ficam apenas na memória e são enviadas ao servidor."
+                   FontSize="11"
+                   TextColor="{StaticResource TextMuted}"
+                   Margin="0,12,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

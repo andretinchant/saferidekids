@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+                    xmlns:converters="clr-namespace:SafeRideKids.Familia.Maui.Converters">
+
+    <!-- Converters compartilhados -->
+    <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+    <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
+    <converters:IntGreaterThanZeroConverter x:Key="IntGreaterThanZeroConverter" />
+    <converters:NotNullConverter x:Key="NotNullConverter" />
+
+    <!-- Botão primário -->
+    <Style x:Key="PrimaryButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="CornerRadius" Value="8" />
+    </Style>
+
+    <!-- Entry padrão -->
+    <Style TargetType="Entry">
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="TextColor" Value="{StaticResource TextDefault}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextMuted}" />
+        <Setter Property="HeightRequest" Value="48" />
+    </Style>
+
+    <!-- Label padrão -->
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextDefault}" />
+    </Style>
+
+</ResourceDictionary>

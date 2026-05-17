@@ -1,0 +1,214 @@
+@page "/checkins"
+@attribute [Authorize]
+@inject IBackendApi Api
+@inject ICsvExportService CsvExport
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>Check-ins — SafeRide Kids</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Check-ins</MudText>
+
+<MudPaper Class="pa-4 mb-3" Elevation="1">
+    <MudGrid AlignItems="AlignItems.Center">
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="De" @bind-Date="_from" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="Até" @bind-Date="_to" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string" Label="Provedor" @bind-Value="_providerId" Variant="Variant.Outlined" Clearable="true">
+                <MudSelectItem Value="@("aws-rekognition")">AWS Rekognition</MudSelectItem>
+                <MudSelectItem Value="@("unico-idcloud")">Unico IDCloud</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string" Label="Resultado" @bind-Value="_outcome" Variant="Variant.Outlined" Clearable="true">
+                <MudSelectItem Value="@("approved")">Aprovado</MudSelectItem>
+                <MudSelectItem Value="@("inconclusive")">Inconclusivo</MudSelectItem>
+                <MudSelectItem Value="@("rejected")">Rejeitado</MudSelectItem>
+                <MudSelectItem Value="@("fallback")">Fallback</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="bool?" Label="Usou fallback" @bind-Value="_usedFallback" Variant="Variant.Outlined" Clearable="true">
+                <MudSelectItem T="bool?" Value="@true">Sim</MudSelectItem>
+                <MudSelectItem T="bool?" Value="@false">Não</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12">
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" OnClick="Search">
+                    Buscar
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="Reset">
+                    Limpar
+                </MudButton>
+                <MudSpacer />
+                <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Download"
+                           Disabled="@(_result is null || _result.Items.Count == 0)" OnClick="ExportCsv">
+                    Exportar CSV
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_result is not null)
+{
+    <MudPaper Elevation="1">
+        <MudTable T="CheckInListItem" Items="_result.Items" Hover="true" Dense="true" Bordered="false" Striped="true">
+            <HeaderContent>
+                <MudTh>Data/hora</MudTh>
+                <MudTh>Resultado</MudTh>
+                <MudTh>Provedor</MudTh>
+                <MudTh>Confiança</MudTh>
+                <MudTh>Latência</MudTh>
+                <MudTh>Fallback</MudTh>
+                <MudTh>Criança</MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Data/hora">@context.StartedAt.LocalDateTime.ToString("dd/MM HH:mm:ss")</MudTd>
+                <MudTd DataLabel="Resultado"><OutcomeBadge Outcome="@context.Result" /></MudTd>
+                <MudTd DataLabel="Provedor"><ProviderBadge ProviderId="@context.ProviderId" /></MudTd>
+                <MudTd DataLabel="Confiança">@(context.Confidence is null ? "—" : $"{context.Confidence * 100:F2}%")</MudTd>
+                <MudTd DataLabel="Latência">@(context.LatencyMs is null ? "—" : $"{context.LatencyMs} ms")</MudTd>
+                <MudTd DataLabel="Fallback">
+                    @if (context.UsedFallback)
+                    {
+                        <MudChip Size="Size.Small" Color="Color.Info">@context.FallbackType</MudChip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">—</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Criança">
+                    @* PII: iniciais por default; click revela e registra audit_log no backend. *@
+                    <PiiReveal InitialsOrMasked="@context.ChildDisplayInitials"
+                               RevealAsync="@(() => RevealChildName(context.ChildId))" />
+                </MudTd>
+                <MudTd>
+                    <MudTooltip Text="Ver detalhe">
+                        <MudIconButton Size="Size.Small" Color="Color.Primary"
+                                       Icon="@Icons.Material.Filled.Visibility"
+                                       OnClick="@(() => Nav.NavigateTo($"/checkins/{context.Id}"))" />
+                    </MudTooltip>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>Nenhum check-in encontrado para os filtros aplicados.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3">
+            <MudText Typo="Typo.body2">
+                Página @_result.Page de @_result.TotalPages — @_result.TotalItems registros
+            </MudText>
+            <MudSpacer />
+            <MudPagination Color="Color.Primary"
+                           Count="@Math.Max(1, _result.TotalPages)"
+                           Selected="_result.Page"
+                           SelectedChanged="OnPageChanged" />
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    private DateTime? _from = DateTime.UtcNow.AddDays(-7).Date;
+    private DateTime? _to = DateTime.UtcNow.Date;
+    private string? _providerId;
+    private string? _outcome;
+    private bool? _usedFallback;
+    private int _page = 1;
+    private const int PageSize = 25;
+    private bool _loading;
+    private PagedResult<CheckInListItem>? _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Search();
+    }
+
+    private async Task Search()
+    {
+        _page = 1;
+        await Load();
+    }
+
+    private async Task Reset()
+    {
+        _from = DateTime.UtcNow.AddDays(-7).Date;
+        _to = DateTime.UtcNow.Date;
+        _providerId = null;
+        _outcome = null;
+        _usedFallback = null;
+        await Search();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        try
+        {
+            _result = await Api.GetCheckInsAsync(_from, _to, _providerId, _outcome, _usedFallback, _page, PageSize, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar check-ins: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _page = page;
+        await Load();
+    }
+
+    private async Task<string?> RevealChildName(Guid childId)
+    {
+        try
+        {
+            var resp = await Api.RevealChildDisplayNameAsync(childId, CancellationToken.None);
+            Snackbar.Add("Acesso registrado em audit_log.", Severity.Info);
+            return resp.DisplayName;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Falha ao revelar nome: {ex.Message}", Severity.Error);
+            return null;
+        }
+    }
+
+    private async Task ExportCsv()
+    {
+        if (_result is null) return;
+        try
+        {
+            var bytes = CsvExport.BuildCheckInsCsv(_result.Items);
+            await DownloadCsv(bytes, $"checkins-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao exportar CSV: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadCsv(byte[] bytes, string filename)
+    {
+        // Conversão via base64 + JS bridge. Para uploads grandes, considerar IJSObjectReference + ReadableStream.
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("srkDownloadFile", filename, base64, "text/csv");
+    }
+}

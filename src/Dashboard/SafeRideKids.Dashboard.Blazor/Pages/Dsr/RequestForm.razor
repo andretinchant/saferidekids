@@ -1,0 +1,190 @@
+@page "/dsr"
+@attribute [Authorize]
+@inject IBackendApi Api
+@inject IAuthState AuthState
+@inject IConfiguration Config
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+
+<PageTitle>DSR (LGPD) — SafeRide Kids</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Solicitação DSR (LGPD)</MudText>
+<MudAlert Severity="Severity.Info" Class="mb-3">
+    Esta tela executa requisições de titular conforme a LGPD: <b>acesso</b>, <b>portabilidade</b> e <b>exclusão</b>.
+    Toda execução fica registrada em <code>audit_log</code> e — para exclusão — apaga o enrollment em <b>todos</b>
+    os provedores ativos (idempotente). SLA interno: 7 dias úteis.
+</MudAlert>
+
+<MudPaper Class="pa-4" Elevation="1">
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudSelect T="string" Label="Ação"
+                       @bind-Value="_action"
+                       Variant="Variant.Outlined" Required="true">
+                <MudSelectItem Value="@("access")">Acesso (consulta)</MudSelectItem>
+                <MudSelectItem Value="@("portability")">Portabilidade (exportar)</MudSelectItem>
+                <MudSelectItem Value="@("delete")">Exclusão</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudSelect T="string" Label="Tipo do titular"
+                       @bind-Value="_subjectType"
+                       Variant="Variant.Outlined" Required="true">
+                <MudSelectItem Value="@("family")">Família</MudSelectItem>
+                <MudSelectItem Value="@("child")">Criança</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudTextField T="string" Label="ID do titular (UUID)"
+                          @bind-Value="_subjectIdText"
+                          Variant="Variant.Outlined" Required="true"
+                          HelperText="ID da família ou criança conforme o tipo escolhido." />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" Label="Justificativa"
+                          @bind-Value="_justification"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          HelperText="@($"Obrigatória para exclusão. Mínimo {_minJustification} caracteres.")"
+                          Required="@(_action == "delete")" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Filled"
+                           Color="@(_action == "delete" ? Color.Error : Color.Primary)"
+                           StartIcon="@ActionIcon"
+                           Disabled="@(_loading || !CanSubmit())"
+                           OnClick="OnSubmit">
+                    Executar @TranslateAction(_action)
+                </MudButton>
+                @if (_loading)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                }
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_response is not null)
+{
+    <MudPaper Class="pa-4 mt-3" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Resultado</MudText>
+        <MudList Dense="true">
+            <MudListItem><b>Ação:</b> @_response.Action</MudListItem>
+            <MudListItem><b>Status:</b> @_response.Status</MudListItem>
+            <MudListItem><b>Solicitado em:</b> @_response.RequestedAt.LocalDateTime</MudListItem>
+            @if (_response.RequestId is not null)
+            {
+                <MudListItem><b>Request ID:</b> <code>@_response.RequestId</code></MudListItem>
+            }
+            @if (_response.AffectedProviders is { Count: > 0 })
+            {
+                <MudListItem>
+                    <b>Provedores impactados:</b>
+                    @foreach (var p in _response.AffectedProviders)
+                    {
+                        <MudChip Size="Size.Small" Color="Color.Info" Class="ma-1">@p</MudChip>
+                    }
+                </MudListItem>
+            }
+        </MudList>
+
+        @if (!string.IsNullOrWhiteSpace(_response.PayloadJson))
+        {
+            <MudExpansionPanels Class="mt-2">
+                <MudExpansionPanel Text="Payload">
+                    <pre style="white-space:pre-wrap;font-size:0.85rem;">@_response.PayloadJson</pre>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        }
+    </MudPaper>
+}
+
+@code {
+    private string _action = "access";
+    private string _subjectType = "family";
+    private string _subjectIdText = string.Empty;
+    private string _justification = string.Empty;
+    private int _minJustification = 20;
+    private bool _loading;
+    private DsrResponse? _response;
+
+    protected override void OnInitialized()
+    {
+        _minJustification = Config.GetValue<int?>("Lgpd:DsrJustificationMinLength") ?? 20;
+    }
+
+    private string ActionIcon => _action switch
+    {
+        "access"      => Icons.Material.Filled.Search,
+        "portability" => Icons.Material.Filled.FileDownload,
+        "delete"      => Icons.Material.Filled.DeleteForever,
+        _             => Icons.Material.Filled.PlayArrow
+    };
+
+    private static string TranslateAction(string a) => a switch
+    {
+        "access"      => "acesso",
+        "portability" => "portabilidade",
+        "delete"      => "exclusão",
+        _             => a
+    };
+
+    private bool CanSubmit()
+    {
+        if (!Guid.TryParse(_subjectIdText, out _)) return false;
+        if (string.IsNullOrWhiteSpace(_action)) return false;
+        if (string.IsNullOrWhiteSpace(_subjectType)) return false;
+        if (_action == "delete" && (_justification?.Length ?? 0) < _minJustification) return false;
+        return true;
+    }
+
+    private async Task OnSubmit()
+    {
+        if (!Guid.TryParse(_subjectIdText, out var subjectId))
+        {
+            Snackbar.Add("ID do titular inválido.", Severity.Error);
+            return;
+        }
+
+        if (_action == "delete")
+        {
+            // Confirmação extra para ação destrutiva.
+            var parameters = new DialogParameters
+            {
+                ["ContentText"] = $"Confirma a EXCLUSÃO definitiva do titular {subjectId}? Esta ação apaga o enrollment em todos os provedores ativos e é irreversível.",
+                ["ButtonText"]  = "Confirmar exclusão",
+                ["Color"]       = Color.Error
+            };
+            var dialog = await Dialog.ShowAsync<ConfirmDeleteDialog>("Confirmar DSR-delete", parameters);
+            var result = await dialog.Result;
+            if (result is null || result.Canceled)
+            {
+                return;
+            }
+        }
+
+        _loading = true;
+        _response = null;
+        try
+        {
+            var req = new DsrRequest(
+                SubjectType: _subjectType,
+                SubjectId: subjectId,
+                Justification: _justification ?? string.Empty,
+                OperatorIdHash: AuthState.GetOperatorIdHash());
+
+            _response = await Api.SubmitDsrAsync(_action, req, CancellationToken.None);
+            Snackbar.Add($"DSR/{_action} executado com sucesso.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Falha ao executar DSR: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

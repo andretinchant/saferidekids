@@ -1,0 +1,37 @@
+@page "/login"
+@layout MainLayout
+@inject NavigationManager Nav
+
+<PageTitle>Entrar — SafeRide Kids</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Class="pa-6" Elevation="3">
+        <MudStack AlignItems="AlignItems.Center" Spacing="3">
+            <MudIcon Icon="@Icons.Material.Filled.DirectionsBus" Size="Size.Large" Color="Color.Primary" />
+            <MudText Typo="Typo.h5">SafeRide Kids — Dashboard POC</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                Acesso restrito ao time da POC. Autenticação via Cognito.
+            </MudText>
+            @* POC: o botão dispara o Challenge OIDC. Em ambiente de desenvolvimento
+               sem Cognito configurado, este botão falha — usar usuário-secrets ou
+               substituir por um stub local antes de testar. *@
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Login"
+                       Href="@SignInUrl"
+                       ForceLoad="true">
+                Entrar com Cognito
+            </MudButton>
+            <MudText Typo="Typo.caption">
+                Dados de teste podem conter PII sintética. Trate qualquer informação como sensível (LGPD Art. 11).
+            </MudText>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+
+    private string SignInUrl => string.IsNullOrEmpty(ReturnUrl)
+        ? "/signin"
+        : $"/signin?returnUrl={Uri.EscapeDataString(ReturnUrl)}";
+}

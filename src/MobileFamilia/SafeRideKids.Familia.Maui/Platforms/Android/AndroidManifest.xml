@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:allowBackup="false"
+                 android:icon="@mipmap/appicon"
+                 android:roundIcon="@mipmap/appicon_round"
+                 android:supportsRtl="true"
+                 android:usesCleartextTraffic="false" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Câmera para enrollment facial. NUNCA pedimos WRITE_EXTERNAL_STORAGE
+         porque fotos não são gravadas em disco (POC LGPD). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Câmera obrigatória para o app funcionar; declaramos para o Play Store filtrar -->
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="true" />
+</manifest>

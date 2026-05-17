@@ -1,0 +1,124 @@
+@page "/families"
+@attribute [Authorize]
+@inject IBackendApi Api
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+
+<PageTitle>Famílias — SafeRide Kids</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Famílias</MudText>
+<MudText Typo="Typo.body1" Class="mb-3">
+    Listagem para revisão operacional. Nenhuma PII clara é exibida — apenas hashes/iniciais.
+    Para revelar nome da criança, use o botão "olho" e justifique a ação (registrada em <code>audit_log</code>).
+</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_families is not null)
+{
+    <MudTable T="FamilyListItem" Items="_families.Items" Hover="true" Dense="true"
+              OnRowClick="@OnFamilyClicked">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Tenant</MudTh>
+            <MudTh>Email (hash)</MudTh>
+            <MudTh>Provedor preferido</MudTh>
+            <MudTh>Crianças</MudTh>
+            <MudTh>Enrollments ativos</MudTh>
+            <MudTh>Criada em</MudTh>
+            <MudTh>Ações</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID"><code>@context.Id.ToString().Substring(0, 8)</code></MudTd>
+            <MudTd DataLabel="Tenant">@context.TenantId</MudTd>
+            <MudTd DataLabel="Email (hash)"><code>@context.ResponsavelEmailHashShort</code></MudTd>
+            <MudTd DataLabel="Provedor preferido">
+                @if (!string.IsNullOrEmpty(context.PreferredProviderId))
+                {
+                    <ProviderBadge ProviderId="@context.PreferredProviderId" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption">—</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Crianças">@context.ChildrenCount</MudTd>
+            <MudTd DataLabel="Enrollments ativos">@context.ActiveEnrollmentsCount</MudTd>
+            <MudTd DataLabel="Criada em">@context.CreatedAt.LocalDateTime.ToString("dd/MM/yyyy")</MudTd>
+            <MudTd>
+                <MudTooltip Text="Ver crianças">
+                    <MudIconButton Size="Size.Small"
+                                   Color="Color.Primary"
+                                   Icon="@Icons.Material.Filled.ChildCare"
+                                   OnClick="@(() => OpenChildrenDialog(context))" />
+                </MudTooltip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3">
+        <MudText Typo="Typo.body2">
+            Página @_families.Page de @_families.TotalPages — @_families.TotalItems famílias
+        </MudText>
+        <MudSpacer />
+        <MudPagination Color="Color.Primary"
+                       Count="@Math.Max(1, _families.TotalPages)"
+                       Selected="_families.Page"
+                       SelectedChanged="OnPageChanged" />
+    </MudStack>
+}
+
+@code {
+    private bool _loading = true;
+    private int _page = 1;
+    private const int PageSize = 25;
+    private PagedResult<FamilyListItem>? _families;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        try
+        {
+            _families = await Api.GetFamiliesAsync(_page, PageSize, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar famílias: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _page = page;
+        await Load();
+    }
+
+    private Task OnFamilyClicked(TableRowClickEventArgs<FamilyListItem> args)
+    {
+        if (args.Item is null) return Task.CompletedTask;
+        return OpenChildrenDialog(args.Item);
+    }
+
+    private async Task OpenChildrenDialog(FamilyListItem family)
+    {
+        // Abre dialog reutilizável que carrega crianças da família + permite revelar nome (audit).
+        var parameters = new DialogParameters
+        {
+            ["FamilyId"]   = family.Id,
+            ["FamilyHash"] = family.ResponsavelEmailHashShort
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        await Dialog.ShowAsync<FamilyChildrenDialog>("Crianças da família", parameters, options);
+    }
+}

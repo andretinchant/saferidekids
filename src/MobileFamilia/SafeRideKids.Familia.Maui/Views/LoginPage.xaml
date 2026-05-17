@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Familia.Maui.ViewModels"
+             x:Class="SafeRideKids.Familia.Maui.Views.LoginPage"
+             x:DataType="vm:LoginViewModel"
+             Title="Entrar"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
+
+            <Label Text="SafeRide Kids"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Primary}" />
+            <Label Text="Acesso do responsável"
+                   FontSize="16"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource TextMuted}" />
+
+            <Entry Placeholder="E-mail"
+                   Keyboard="Email"
+                   Text="{Binding Email, Mode=TwoWay}" />
+
+            <Entry Placeholder="Senha"
+                   IsPassword="True"
+                   Text="{Binding Password, Mode=TwoWay}" />
+
+            <Entry Placeholder="Tenant"
+                   Text="{Binding TenantId, Mode=TwoWay}" />
+
+            <Button Text="Entrar"
+                    Command="{Binding SignInCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    Style="{StaticResource PrimaryButton}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" />
+
+            <Label Text="{Binding StatusMessage}"
+                   TextColor="{StaticResource Danger}"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotEmptyConverter}}" />
+
+            <Label Text="POC: o app aceita qualquer credencial. Em produção, login real via Cognito."
+                   FontSize="12"
+                   TextColor="{StaticResource TextMuted}"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,24,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

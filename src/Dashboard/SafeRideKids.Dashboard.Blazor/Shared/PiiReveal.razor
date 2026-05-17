@@ -1,0 +1,66 @@
+@* Componente para revelar nome (ou outra PII) sob gesto explícito.
+   Default: mostra iniciais ou placeholder; click do operador chama o callback
+   que faz a chamada ao backend (que registra audit_log). *@
+
+@if (_revealed && !string.IsNullOrEmpty(_revealedValue))
+{
+    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.body2">@_revealedValue</MudText>
+        <MudTooltip Text="Esconder">
+            <MudIconButton Icon="@Icons.Material.Filled.VisibilityOff"
+                           Size="Size.Small"
+                           Color="Color.Default"
+                           OnClick="Hide" />
+        </MudTooltip>
+    </MudStack>
+}
+else
+{
+    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.body2" Style="font-family:monospace;">@(InitialsOrMasked ?? "***")</MudText>
+        <MudTooltip Text="Revelar (registra acesso em audit_log)">
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                           Size="Size.Small"
+                           Color="Color.Warning"
+                           Disabled="@_loading"
+                           OnClick="Reveal" />
+        </MudTooltip>
+        @if (_loading)
+        {
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+        }
+    </MudStack>
+}
+
+@code {
+    /// <summary>Iniciais/placeholder mostrado por padrão (sem PII clara).</summary>
+    [Parameter] public string? InitialsOrMasked { get; set; }
+
+    /// <summary>Callback assíncrono que devolve o valor decifrado. Implementação deve registrar audit_log no backend.</summary>
+    [Parameter, EditorRequired] public Func<Task<string?>> RevealAsync { get; set; } = default!;
+
+    private bool _revealed;
+    private bool _loading;
+    private string? _revealedValue;
+
+    private async Task Reveal()
+    {
+        _loading = true;
+        try
+        {
+            _revealedValue = await RevealAsync();
+            _revealed = !string.IsNullOrEmpty(_revealedValue);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Hide()
+    {
+        // Limpa do estado client para não persistir PII em memória além do necessário.
+        _revealed = false;
+        _revealedValue = null;
+    }
+}

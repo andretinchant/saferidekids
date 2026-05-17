@@ -1,0 +1,11 @@
+@* Menu lateral em pt-BR, ícones Material. *@
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Início</MudNavLink>
+    <MudNavGroup Title="Check-ins" Icon="@Icons.Material.Filled.QrCodeScanner" Expanded="true">
+        <MudNavLink Href="checkins" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Listar</MudNavLink>
+    </MudNavGroup>
+    <MudNavLink Href="metrics" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.QueryStats">Métricas</MudNavLink>
+    <MudNavLink Href="families" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FamilyRestroom">Famílias</MudNavLink>
+    <MudDivider Class="my-2" />
+    <MudNavLink Href="dsr" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PrivacyTip">DSR (LGPD)</MudNavLink>
+</MudNavMenu>

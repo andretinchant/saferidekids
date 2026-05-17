@@ -1,0 +1,263 @@
+@page "/metrics"
+@attribute [Authorize]
+@inject IBackendApi Api
+@inject ICsvExportService CsvExport
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<PageTitle>Métricas — SafeRide Kids</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Métricas agregadas</MudText>
+
+<MudPaper Class="pa-4 mb-3" Elevation="1">
+    <MudGrid AlignItems="AlignItems.Center">
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="De" @bind-Date="_from" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="Até" @bind-Date="_to" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.QueryStats" OnClick="Load">
+                    Recarregar
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Download"
+                           Disabled="@(_summary is null)" OnClick="ExportCsv">
+                    Exportar CSV
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_summary is not null)
+{
+    @* ----------- Cards totalizadores ----------- *@
+    <MudGrid Class="mb-3">
+        <MudItem xs="12" sm="6" md="3">
+            <MetricCard Title="Total de check-ins" Value="@_summary.TotalCheckIns.ToString("N0")"
+                        Icon="@Icons.Material.Filled.HowToReg" Color="Color.Primary" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MetricCard Title="Taxa de fallback" Value="@($"{_summary.FallbackRate * 100:F1}%")"
+                        Icon="@Icons.Material.Filled.SyncProblem" Color="Color.Warning" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MetricCard Title="Latência p95" Value="@($"{_summary.P95LatencyMs} ms")"
+                        Hint="@($"p50: {_summary.P50LatencyMs} ms · p99: {_summary.P99LatencyMs} ms")"
+                        Icon="@Icons.Material.Filled.Speed" Color="Color.Info" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MetricCard Title="Custo estimado (USD)"
+                        Value="@_summary.EstimatedCostUsd.ToString("C4", System.Globalization.CultureInfo.GetCultureInfo("en-US"))"
+                        Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" />
+        </MudItem>
+    </MudGrid>
+
+    @* ----------- Distribuição por outcome (Donut) e Comparativo AWS vs Unico ----------- *@
+    <MudGrid Class="mb-3">
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Distribuição por outcome</MudText>
+                @if (_outcomeData.Length > 0)
+                {
+                    <MudChart ChartType="ChartType.Donut" Width="100%" Height="320px"
+                              InputData="@_outcomeData" InputLabels="@_outcomeLabels" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2">Sem dados.</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Comparativo AWS vs Unico</MudText>
+                <MudSimpleTable Dense="true" Hover="true" Striped="true">
+                    <thead>
+                        <tr>
+                            <th>Métrica</th>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <th><ProviderBadge ProviderId="@p.ProviderId" /></th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total</td>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <td>@p.TotalCheckIns.ToString("N0")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>Taxa de sucesso</td>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <td>@($"{p.SuccessRate * 100:F2}%")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>Taxa de fallback</td>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <td>@($"{p.FallbackRate * 100:F2}%")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>Latência p50</td>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <td>@($"{p.P50LatencyMs} ms")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>Latência p95</td>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <td>@($"{p.P95LatencyMs} ms")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>Latência p99</td>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <td>@($"{p.P99LatencyMs} ms")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>Confiança média</td>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <td>@($"{p.AverageConfidence * 100:F2}%")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>Custo estimado (USD)</td>
+                            @foreach (var p in _summary.ProviderBreakdown)
+                            {
+                                <td>@p.EstimatedCostUsd.ToString("C4", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</td>
+                            }
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    @* ----------- Série temporal diária ----------- *@
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Série temporal diária</MudText>
+        @if (_seriesData.Count > 0)
+        {
+            <MudChart ChartType="ChartType.Line" Width="100%" Height="360px"
+                      ChartSeries="@_seriesData" XAxisLabels="@_seriesLabels" />
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">Sem dados na janela escolhida.</MudText>
+        }
+    </MudPaper>
+}
+
+@code {
+    private DateTime? _from = DateTime.UtcNow.AddDays(-7).Date;
+    private DateTime? _to = DateTime.UtcNow.Date;
+
+    private bool _loading;
+    private MetricsSummary? _summary;
+
+    // Dados pré-processados para os MudCharts.
+    private double[] _outcomeData = Array.Empty<double>();
+    private string[] _outcomeLabels = Array.Empty<string>();
+    private List<ChartSeries> _seriesData = new();
+    private string[] _seriesLabels = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        if (_from is null || _to is null)
+        {
+            Snackbar.Add("Selecione um período válido.", Severity.Warning);
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            _summary = await Api.GetMetricsSummaryAsync(_from.Value, _to.Value, CancellationToken.None);
+            PrepareCharts(_summary);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar métricas: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void PrepareCharts(MetricsSummary summary)
+    {
+        // Donut por outcome — preserva ordem semântica.
+        var outcomes = new[] { "approved", "inconclusive", "rejected", "fallback" };
+        var data = new List<double>();
+        var labels = new List<string>();
+        foreach (var key in outcomes)
+        {
+            if (summary.ByOutcome.TryGetValue(key, out var v) && v > 0)
+            {
+                data.Add(v);
+                labels.Add(TranslateOutcome(key));
+            }
+        }
+        _outcomeData = data.ToArray();
+        _outcomeLabels = labels.ToArray();
+
+        // Série temporal: 4 séries (approved/inconclusive/rejected/fallback) sobre dias.
+        _seriesLabels = summary.DailySeries.Select(p => p.Day.ToString("dd/MM")).ToArray();
+        _seriesData = new List<ChartSeries>
+        {
+            new() { Name = "Aprovados",    Data = summary.DailySeries.Select(p => (double)p.Approved).ToArray() },
+            new() { Name = "Inconclusivos",Data = summary.DailySeries.Select(p => (double)p.Inconclusive).ToArray() },
+            new() { Name = "Rejeitados",   Data = summary.DailySeries.Select(p => (double)p.Rejected).ToArray() },
+            new() { Name = "Fallback",     Data = summary.DailySeries.Select(p => (double)p.Fallback).ToArray() }
+        };
+    }
+
+    private static string TranslateOutcome(string key) => key switch
+    {
+        "approved"     => "Aprovados",
+        "inconclusive" => "Inconclusivos",
+        "rejected"     => "Rejeitados",
+        "fallback"     => "Fallback",
+        _              => key
+    };
+
+    private async Task ExportCsv()
+    {
+        if (_summary is null) return;
+        try
+        {
+            var bytes = CsvExport.BuildMetricsSummaryCsv(_summary);
+            var base64 = Convert.ToBase64String(bytes);
+            await JS.InvokeVoidAsync("srkDownloadFile", $"metrics-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv", base64, "text/csv");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao exportar CSV: {ex.Message}", Severity.Error);
+        }
+    }
+}

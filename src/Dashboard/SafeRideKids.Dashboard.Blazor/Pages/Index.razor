@@ -1,0 +1,89 @@
+@page "/"
+@attribute [Authorize]
+@inject IBackendApi Api
+@inject ISnackbar Snackbar
+
+<PageTitle>Início — SafeRide Kids</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Visão Geral</MudText>
+<MudText Typo="Typo.body1" Class="mb-4">
+    Resumo dos últimos 7 dias do piloto de biometria facial.
+    Lembre-se: dados pessoais sensíveis (LGPD Art. 11) — não exporte sem necessidade operacional.
+</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_summary is not null)
+{
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MetricCard Title="Total de check-ins"
+                        Value="@_summary.TotalCheckIns.ToString("N0")"
+                        Icon="@Icons.Material.Filled.HowToReg"
+                        Color="Color.Primary" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MetricCard Title="Taxa de fallback"
+                        Value="@($"{_summary.FallbackRate * 100:F1}%")"
+                        Icon="@Icons.Material.Filled.SyncProblem"
+                        Color="Color.Warning" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MetricCard Title="Latência p95"
+                        Value="@($"{_summary.P95LatencyMs} ms")"
+                        Icon="@Icons.Material.Filled.Speed"
+                        Color="Color.Info" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MetricCard Title="Custo estimado (USD)"
+                        Value="@_summary.EstimatedCostUsd.ToString("C4", System.Globalization.CultureInfo.GetCultureInfo("en-US"))"
+                        Icon="@Icons.Material.Filled.AttachMoney"
+                        Color="Color.Success" />
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="pa-4 mt-4" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Atalhos</MudText>
+        <MudStack Row="true" Spacing="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="checkins" StartIcon="@Icons.Material.Filled.List">
+                Listar check-ins
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="metrics" StartIcon="@Icons.Material.Filled.QueryStats">
+                Métricas detalhadas
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="families" StartIcon="@Icons.Material.Filled.FamilyRestroom">
+                Famílias
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+}
+else
+{
+    <MudAlert Severity="Severity.Warning">Não foi possível carregar o resumo.</MudAlert>
+}
+
+@code {
+    private bool _loading = true;
+    private MetricsSummary? _summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // POC: janela default = últimos 7 dias.
+            var to = DateTime.UtcNow;
+            var from = to.AddDays(-7);
+            _summary = await Api.GetMetricsSummaryAsync(from, to, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar resumo: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

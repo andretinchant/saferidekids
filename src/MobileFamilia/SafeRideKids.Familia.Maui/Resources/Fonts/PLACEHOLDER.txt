@@ -1,0 +1,4 @@
+Coloque aqui as fontes OpenSans-Regular.ttf e OpenSans-Semibold.ttf
+(ou outras de sua escolha — basta atualizar MauiProgram.cs em ConfigureFonts).
+
+Não incluímos as fontes binarias por nao termos licenca/payload no repo da POC.

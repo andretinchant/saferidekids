@@ -1,0 +1,2 @@
+Placeholder. Substituir por favicon.ico real antes do deploy.
+Sugestão: gerar um 32x32 com o ícone do app (escudo + ônibus).

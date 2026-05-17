@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Motorista.Maui.ViewModels"
+             x:Class="SafeRideKids.Motorista.Maui.Views.CheckInPage"
+             x:DataType="vm:CheckInViewModel"
+             Title="Detalhe da parada">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+
+            <Border StrokeShape="RoundRectangle 12"
+                    BackgroundColor="{DynamicResource Surface}"
+                    Padding="20">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="{Binding DisplayName}"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           SemanticProperties.HeadingLevel="Level1" />
+                    <Label Text="{Binding AddressLabel}"
+                           FontSize="15"
+                           TextColor="{DynamicResource Gray500}" />
+                    <Label Text="{Binding BoardingMode, StringFormat='Modo de embarque: {0}'}"
+                           FontSize="12"
+                           TextColor="{DynamicResource Gray400}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Posicione a crianca em frente a camera e toque para iniciar o check-in."
+                   FontSize="14"
+                   HorizontalTextAlignment="Center" />
+
+            <Button Text="Iniciar check-in"
+                    Command="{Binding StartCheckInCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    Style="{StaticResource HeroButton}"
+                    SemanticProperties.Hint="Toque para iniciar a captura facial." />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                   TextColor="{DynamicResource StatusRejectedColor}"
+                   HorizontalTextAlignment="Center" />
+
+            <Label Text="{Binding InfoMessage}"
+                   IsVisible="{Binding InfoMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                   TextColor="{DynamicResource StatusInconclusiveColor}"
+                   HorizontalTextAlignment="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

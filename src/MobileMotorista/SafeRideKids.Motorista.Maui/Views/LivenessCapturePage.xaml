@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Motorista.Maui.ViewModels"
+             x:Class="SafeRideKids.Motorista.Maui.Views.LivenessCapturePage"
+             x:DataType="vm:LivenessCaptureViewModel"
+             Title="Captura facial"
+             BackgroundColor="{DynamicResource Background}">
+
+    <Grid RowDefinitions="*,Auto,Auto,*">
+
+        <!-- Oval ilustrativo no centro -->
+        <Frame Grid.Row="0" Grid.RowSpan="4"
+               BorderColor="{DynamicResource Primary}"
+               BackgroundColor="Transparent"
+               CornerRadius="160"
+               HeightRequest="320"
+               WidthRequest="240"
+               HorizontalOptions="Center"
+               VerticalOptions="Center"
+               HasShadow="False"
+               Padding="0">
+            <Label Text="Centralize o rosto"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   FontSize="14"
+                   TextColor="{DynamicResource Gray500}" />
+        </Frame>
+
+        <Label Grid.Row="1"
+               Text="{Binding ProviderLabel, StringFormat='Provedor: {0}'}"
+               HorizontalOptions="Center"
+               FontSize="11"
+               TextColor="{DynamicResource Gray400}"
+               Margin="0,12,0,0" />
+
+        <VerticalStackLayout Grid.Row="2"
+                             Spacing="8"
+                             Padding="20"
+                             HorizontalOptions="Center"
+                             VerticalOptions="End">
+            <ActivityIndicator IsRunning="{Binding IsCapturing}"
+                               IsVisible="{Binding IsCapturing}"
+                               HorizontalOptions="Center"
+                               Color="{DynamicResource Primary}" />
+            <Label Text="{Binding StatusMessage}"
+                   HorizontalTextAlignment="Center"
+                   FontSize="16" />
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                   TextColor="{DynamicResource StatusRejectedColor}"
+                   HorizontalTextAlignment="Center" />
+            <Label Text="{Binding InfoMessage}"
+                   IsVisible="{Binding InfoMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                   TextColor="{DynamicResource StatusInconclusiveColor}"
+                   HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <Label Grid.Row="3"
+               Text="POC: captura simulada (SDK real entra aqui)."
+               FontSize="10"
+               HorizontalOptions="Center"
+               VerticalOptions="End"
+               TextColor="{DynamicResource Gray400}"
+               Margin="0,0,0,16" />
+    </Grid>
+</ContentPage>

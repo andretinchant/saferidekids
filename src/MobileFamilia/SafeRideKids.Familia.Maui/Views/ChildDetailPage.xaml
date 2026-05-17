@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Familia.Maui.ViewModels"
+             x:Class="SafeRideKids.Familia.Maui.Views.ChildDetailPage"
+             x:DataType="vm:ChildDetailViewModel"
+             Title="Detalhes"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <VerticalStackLayout Spacing="4">
+                <Label Text="{Binding Child.DisplayName}"
+                       FontSize="22"
+                       FontAttributes="Bold" />
+                <Label Text="{Binding Child.School}"
+                       TextColor="{StaticResource TextMuted}" />
+                <Label Text="{Binding Child.BoardingMode, StringFormat='Modo de embarque: {0}'}"
+                       FontSize="13" />
+            </VerticalStackLayout>
+
+            <Border Padding="12"
+                    BackgroundColor="{StaticResource Surface}"
+                    Stroke="{StaticResource SurfaceBorder}"
+                    StrokeThickness="1">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Status do cadastro facial" FontAttributes="Bold" />
+                    <Label Text="{Binding Enrollment.Status, FallbackValue='-'}" />
+                    <Label Text="{Binding Enrollment.ExpiresAt, StringFormat='Re-cadastro necessário até: {0:dd/MM/yyyy}'}"
+                           IsVisible="{Binding Enrollment.ExpiresAt, Converter={StaticResource NotNullConverter}}"
+                           FontSize="12"
+                           TextColor="{StaticResource TextMuted}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Refazer cadastro facial"
+                    Command="{Binding RecaptureCommand}" />
+
+            <Border Padding="12"
+                    BackgroundColor="{StaticResource DangerSoft}"
+                    Stroke="{StaticResource Danger}"
+                    StrokeThickness="1"
+                    Margin="0,20,0,0">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Remover biometria desta criança"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Danger}" />
+                    <Label Text="Esta ação revoga o consentimento e apaga o cadastro nos provedores. Você poderá refazer depois."
+                           FontSize="12" />
+                    <Button Text="Remover biometria"
+                            Command="{Binding RevokeCommand}"
+                            BackgroundColor="{StaticResource Danger}"
+                            TextColor="White" />
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" />
+
+            <Label Text="{Binding StatusMessage}"
+                   FontSize="13"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotEmptyConverter}}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

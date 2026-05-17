@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Motorista.Maui.ViewModels"
+             x:Class="SafeRideKids.Motorista.Maui.Views.FallbackPinPage"
+             x:DataType="vm:FallbackPinViewModel"
+             Title="Confirmar com PIN">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="18">
+
+            <Label Text="Fallback por PIN"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   SemanticProperties.HeadingLevel="Level1" />
+
+            <Label Text="{Binding ChildDisplayName, StringFormat='Crianca: {0}'}"
+                   FontSize="15"
+                   TextColor="{DynamicResource Gray500}" />
+
+            <Label Text="Peca ao responsavel o PIN de 6 digitos enviado por notificacao."
+                   FontSize="14" />
+
+            <Entry Placeholder="PIN"
+                   Text="{Binding Pin}"
+                   Keyboard="Numeric"
+                   MaxLength="6"
+                   FontSize="28"
+                   HorizontalTextAlignment="Center"
+                   SemanticProperties.Hint="Digite os 6 digitos do PIN." />
+
+            <Label Text="{Binding AttemptsLeft, StringFormat='Tentativas restantes: {0}'}"
+                   FontSize="12"
+                   TextColor="{DynamicResource Gray400}"
+                   HorizontalOptions="Center" />
+
+            <Button Text="Validar PIN"
+                    Command="{Binding SubmitCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    Style="{StaticResource PrimaryButton}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                   TextColor="{DynamicResource StatusRejectedColor}"
+                   HorizontalTextAlignment="Center" />
+
+            <Label Text="{Binding InfoMessage}"
+                   IsVisible="{Binding InfoMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                   TextColor="{DynamicResource StatusInconclusiveColor}"
+                   HorizontalTextAlignment="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

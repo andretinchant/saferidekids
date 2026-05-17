@@ -1,0 +1,28 @@
+@* Card simples para destacar uma métrica. Reutilizado em Index, Métricas e detalhe. *@
+
+<MudCard Elevation="2" Class="pa-2">
+    <MudCardContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <MudIcon Icon="@Icon" Color="@Color" Size="Size.Large" />
+            }
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default">@Title</MudText>
+                <MudText Typo="Typo.h5">@Value</MudText>
+                @if (!string.IsNullOrEmpty(Hint))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Default">@Hint</MudText>
+                }
+            </MudStack>
+        </MudStack>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Value { get; set; } = string.Empty;
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public Color Color { get; set; } = Color.Primary;
+}

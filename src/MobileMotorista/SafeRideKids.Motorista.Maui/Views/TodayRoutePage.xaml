@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Motorista.Maui.ViewModels"
+             xmlns:models="clr-namespace:SafeRideKids.Motorista.Maui.Models"
+             x:Class="SafeRideKids.Motorista.Maui.Views.TodayRoutePage"
+             x:DataType="vm:TodayRouteViewModel"
+             Title="Rota de hoje">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Historico"
+                     Command="{Binding ShowHistoryCommand}"
+                     SemanticProperties.Hint="Abrir lista de check-ins do dia." />
+        <ToolbarItem Text="Sair"
+                     Command="{Binding LogoutCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- Cabecalho com nome do motorista e data -->
+        <VerticalStackLayout Grid.Row="0" Padding="16,12" Spacing="4">
+            <Label Text="{Binding DriverName, StringFormat='Ola, {0}'}"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Label Text="{Binding ScheduledDate, StringFormat='Rota agendada para {0:dd/MM/yyyy}'}"
+                   FontSize="13"
+                   TextColor="{DynamicResource Gray500}" />
+        </VerticalStackLayout>
+
+        <!-- Banner offline -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding IsOnline, Converter={StaticResource InvertedBoolConverter}}"
+                StrokeShape="RoundRectangle 6"
+                BackgroundColor="{DynamicResource StatusInconclusiveColor}"
+                Padding="12,8"
+                Margin="16,0,16,8">
+            <Label Text="Sem conexao. Embarques irao para fila offline."
+                   FontSize="13"
+                   TextColor="White" />
+        </Border>
+
+        <!-- Lista de paradas -->
+        <RefreshView Grid.Row="2"
+                     x:Name="StopsRefresh"
+                     IsRefreshing="{Binding IsBusy}"
+                     Command="{Binding LoadCommand}">
+            <CollectionView x:Name="StopsList"
+                            ItemsSource="{Binding Stops}"
+                            SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="12">
+                        <Label Text="Nenhuma parada na sua rota de hoje."
+                               HorizontalOptions="Center"
+                               TextColor="{DynamicResource Gray500}" />
+                        <Label Text="{Binding ErrorMessage}"
+                               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                               TextColor="{DynamicResource StatusRejectedColor}"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:RouteStopDto">
+                        <Border StrokeShape="RoundRectangle 12"
+                                Stroke="{DynamicResource Gray200}"
+                                BackgroundColor="{DynamicResource Surface}"
+                                Padding="16"
+                                Margin="16,6">
+                            <Border.GestureRecognizers>
+                                <!-- BindingContext do CollectionView e o ViewModel; usamos x:Reference para garantir. -->
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={x:Reference StopsList}, Path=BindingContext.SelectStopCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding DisplayName}"
+                                       FontSize="18"
+                                       FontAttributes="Bold" />
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding ExpectedPickupTime, StringFormat='{0:HH:mm}'}"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{DynamicResource Primary}" />
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding AddressLabel}"
+                                       FontSize="13"
+                                       TextColor="{DynamicResource Gray500}"
+                                       LineBreakMode="WordWrap" />
+                                <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding BoardingMode, StringFormat='Embarque: {0}'}"
+                                       FontSize="11"
+                                       TextColor="{DynamicResource Gray400}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

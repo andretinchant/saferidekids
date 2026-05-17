@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Familia.Maui.ViewModels"
+             x:Class="SafeRideKids.Familia.Maui.Views.AddChildPage"
+             x:DataType="vm:AddChildViewModel"
+             Title="Cadastrar criança"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label Text="Dados básicos"
+                   FontSize="18"
+                   FontAttributes="Bold" />
+
+            <Entry Placeholder="Nome da criança"
+                   Text="{Binding DisplayName, Mode=TwoWay}" />
+
+            <Entry Placeholder="Ano de nascimento (ex.: 2017)"
+                   Keyboard="Numeric"
+                   MaxLength="4"
+                   Text="{Binding BirthYearText, Mode=TwoWay}" />
+
+            <Entry Placeholder="Escola"
+                   Text="{Binding School, Mode=TwoWay}" />
+
+            <Label Text="Modo de embarque" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Picker Title="Selecione"
+                    ItemsSource="{Binding BoardingModes}"
+                    SelectedItem="{Binding BoardingMode, Mode=TwoWay}" />
+
+            <Label Text="{Binding ValidationMessage}"
+                   TextColor="{StaticResource Danger}"
+                   IsVisible="{Binding ValidationMessage, Converter={StaticResource StringNotEmptyConverter}}" />
+
+            <Button Text="Continuar para consentimento"
+                    Command="{Binding SubmitCommand}"
+                    Style="{StaticResource PrimaryButton}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" />
+
+            <Label Text="A próxima etapa é o consentimento (LGPD). Sem consentimento ativo, o cadastro facial não pode ser feito."
+                   FontSize="12"
+                   TextColor="{StaticResource TextMuted}"
+                   Margin="0,16,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

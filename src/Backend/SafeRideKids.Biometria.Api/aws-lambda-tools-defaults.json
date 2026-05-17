@@ -1,0 +1,14 @@
+{
+  "Information": [
+    "Configurações para Lambda packaging. Editar antes do primeiro deploy.",
+    "Função handler: ASP.NET Core via Amazon.Lambda.AspNetCoreServer.Hosting (no handler explicit)."
+  ],
+  "profile": "default",
+  "region": "us-east-1",
+  "configuration": "Release",
+  "framework": "net8.0",
+  "function-runtime": "dotnet8",
+  "function-memory-size": 512,
+  "function-timeout": 30,
+  "function-handler": "SafeRideKids.Biometria.Api"
+}

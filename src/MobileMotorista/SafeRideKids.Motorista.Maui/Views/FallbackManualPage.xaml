@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SafeRideKids.Motorista.Maui.ViewModels"
+             x:Class="SafeRideKids.Motorista.Maui.Views.FallbackManualPage"
+             x:DataType="vm:FallbackManualViewModel"
+             Title="Confirmacao manual">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+
+            <Label Text="Confirmacao manual auditada"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   SemanticProperties.HeadingLevel="Level1" />
+
+            <Label Text="{Binding ChildDisplayName, StringFormat='Crianca: {0}'}"
+                   FontSize="15" />
+
+            <Label Text="{Binding AddressLabel}"
+                   FontSize="13"
+                   TextColor="{DynamicResource Gray500}" />
+
+            <!-- Aviso de auditoria conforme LGPD -->
+            <Border StrokeShape="RoundRectangle 8"
+                    BackgroundColor="{DynamicResource StatusInconclusiveColor}"
+                    Padding="12">
+                <Label Text="Atencao: este registro fica em trilha auditavel (LGPD). Descreva claramente o motivo. A foto e opcional e usada apenas em auditoria — nao fica armazenada neste device."
+                       TextColor="White"
+                       FontSize="12" />
+            </Border>
+
+            <Border IsVisible="{Binding IsOffline}"
+                    StrokeShape="RoundRectangle 8"
+                    BackgroundColor="{DynamicResource StatusPendingSyncColor}"
+                    Padding="12">
+                <Label Text="Modo offline: registro sera enfileirado e enviado quando houver conexao."
+                       TextColor="White"
+                       FontSize="12" />
+            </Border>
+
+            <Editor Placeholder="Descreva o motivo do fallback (ex.: criança sem reconhecimento; responsavel autorizou verbalmente; etc.)"
+                    Text="{Binding Justification}"
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="120"
+                    SemanticProperties.Hint="Campo de justificativa obrigatoria." />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Grid.Column="0"
+                        Text="Anexar foto (opcional)"
+                        Command="{Binding TakePhotoCommand}"
+                        Style="{StaticResource SecondaryButton}" />
+                <Button Grid.Column="1"
+                        Text="Remover foto"
+                        Command="{Binding ClearPhotoCommand}"
+                        IsEnabled="{Binding HasPhoto}"
+                        Style="{StaticResource SecondaryButton}" />
+            </Grid>
+
+            <Label Text="Foto anexada para auditoria."
+                   IsVisible="{Binding HasPhoto}"
+                   FontSize="12"
+                   TextColor="{DynamicResource StatusApprovedColor}" />
+
+            <Button Text="Confirmar embarque"
+                    Command="{Binding SubmitCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    Style="{StaticResource HeroButton}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                   TextColor="{DynamicResource StatusRejectedColor}"
+                   HorizontalTextAlignment="Center" />
+
+            <Label Text="{Binding InfoMessage}"
+                   IsVisible="{Binding InfoMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                   TextColor="{DynamicResource StatusApprovedColor}"
+                   HorizontalTextAlignment="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
